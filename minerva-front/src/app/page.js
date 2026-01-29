@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import 'dotenv/config';
 
 // Create a single supabase client for interacting with your database
-const supabase = createClient("https://zawqtezkgaqyxpqczynv.supabase.co", "sb_publishable_QTxrnL5oBgio-QQRT6SdrA_A93_FL_P")
+const supabase = createClient(process.env.NEXT_PUBLIC_dbUrl, process.env.NEXT_PUBLIC_dbKey)
 
 export default function Home() {
   const [data, setData] = useState(null);
