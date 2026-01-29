@@ -1,3 +1,4 @@
+"use client"
 import { redirect } from 'next/navigation'
 import Perfil from './perfil'
 import { createClient } from '@supabase/supabase-js'
