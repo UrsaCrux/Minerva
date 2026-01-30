@@ -34,7 +34,7 @@ export default function Login() {
         if (Perfil().getToken().id_usuario) {
             router.replace("/")
         }
-    }, [])
+    }, [router])
 
 
 
