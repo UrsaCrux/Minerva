@@ -4,12 +4,13 @@ import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { MdLogout, MdHome, MdPeople, MdAssignment } from "react-icons/md"
 import Perfil from "../utils/perfil"
+import ProfileAvatar from "../components/ProfileAvatar"
 import { signOutUser } from "../utils/supaAuth"
 import { hasPermiso } from "../utils/supa"
 import "@/app/dashboard.css"
 
 export default function UserLayout({ children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [navItems, setNavItems] = useState([
     { label: "Inicio", icon: <MdHome size={18} />, href: "/" },
     { label: "Tareas", icon: <MdAssignment size={18} />, href: "/tareas" },
@@ -31,6 +32,14 @@ export default function UserLayout({ children }) {
     checkPermisos()
   }, [])
 
+  // Trigger window resize event when sidebar toggles to fix Calendar width
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      window.dispatchEvent(new Event("resize"))
+    }, 300) // Wait for 250ms transition + buffer
+    return () => clearTimeout(timeout)
+  }, [sidebarOpen])
+
   const handleSignOut = async () => {
     await signOutUser()
     router.replace("/login")
@@ -51,7 +60,10 @@ export default function UserLayout({ children }) {
           <span className="dashboard_header_title">Minerva</span>
         </div>
         <div className="dashboard_header_right">
-          <span className="dashboard_username">{userName}</span>
+          <div className="dashboard_profile_section">
+            <ProfileAvatar />
+            <span className="dashboard_username">{userName}</span>
+          </div>
           <button
             className="dashboard_signout"
             onClick={handleSignOut}

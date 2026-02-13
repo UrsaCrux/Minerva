@@ -1,26 +1,87 @@
 "use client"
+import { useState, useEffect } from "react"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
+import Perfil from "../utils/perfil"
+import { getMyTasks } from "../utils/supa"
+import Link from "next/link"
 
 export default function Home() {
+  const [tasks, setTasks] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const { id_usuario } = Perfil().getToken()
+    if (id_usuario) {
+      loadTasks(id_usuario)
+    }
+  }, [])
+
+  async function loadTasks(userId) {
+    const { tasks, error } = await getMyTasks(userId)
+    if (error) {
+      console.error("Error loading tasks:", error)
+    } else {
+      setTasks(tasks)
+    }
+    setLoading(false)
+  }
+
   return (
     <div>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#1a1a1a", marginBottom: 16 }}>
         Inicio
       </h1>
-      <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e0e0e0", padding: 16 }}>
-        <FullCalendar
-          plugins={[dayGridPlugin]}
-          initialView="dayGridMonth"
-          locale="es"
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,dayGridWeek",
-          }}
-          height="auto"
-          events={[]}
-        />
+
+      <div className="home_grid">
+        {/* Calendar Section */}
+        <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e0e0e0", padding: 16 }}>
+          <FullCalendar
+            plugins={[dayGridPlugin]}
+            initialView="dayGridMonth"
+            locale="es"
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,dayGridWeek",
+            }}
+            height="auto"
+            events={[]}
+          />
+        </div>
+
+        {/* My Tasks Section */}
+        <div className="my_tasks_section">
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#333", marginBottom: 12 }}>
+            Mis trabajos
+          </h2>
+
+          <div className="tasks_list">
+            {loading ? (
+              <p style={{ color: "#666", fontSize: "0.9rem" }}>Cargando tareas...</p>
+            ) : tasks.length === 0 ? (
+              <p style={{ color: "#666", fontSize: "0.9rem" }}>No tienes trabajos asignados.</p>
+            ) : (
+              tasks.map(task => (
+                <Link href={`/tareas`} key={task.id} className="task_card_link">
+                  <div className="task_mini_card">
+                    <div className="task_mini_header">
+                      <span className="task_mini_title">{task.title}</span>
+                      <span className={`task_status_badge ${task.status?.toLowerCase()}`}>
+                        {task.status || "Pendiente"}
+                      </span>
+                    </div>
+                    {task.due_date && (
+                      <div className="task_mini_date">
+                        Vence: {new Date(task.due_date).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

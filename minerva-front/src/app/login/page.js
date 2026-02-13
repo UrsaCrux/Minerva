@@ -59,7 +59,7 @@ export default function Login() {
             setShowSetup(true)
         } else {
             // Returning user — store full_name and go to dashboard
-            Perfil().setName(profile?.full_name || username)
+            Perfil().setName(profile.full_name)
             router.replace("/")
         }
     }
