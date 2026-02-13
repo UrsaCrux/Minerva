@@ -102,6 +102,17 @@ export async function deletePermisoUsuario(userId, permiso) {
 }
 
 /**
+ * Fetches all tasks.
+ */
+export async function getAllTasks() {
+    const { data, error } = await supaClient
+        .from("tasks")
+        .select("*")
+        .order("created_at")
+    return { tasks: data ?? [], error }
+}
+
+/**
  * Creates a new user via the create-user Edge Function.
  * @param {string} username
  * @param {string} password

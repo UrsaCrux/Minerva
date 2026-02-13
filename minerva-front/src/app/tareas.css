@@ -1,0 +1,49 @@
+.task_tree_container {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.task_node_header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.task_node_header:hover {
+    background: #f8f8f8;
+}
+
+.task_node_toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+    color: #666;
+}
+
+.task_node_title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    flex-shrink: 0;
+}
+
+.task_node_assignee {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: #888;
+    white-space: nowrap;
+}
+
+.task_node_children {
+    border-left: 2px solid #e8e8e8;
+    margin-left: 18px;
+}

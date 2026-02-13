@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
-import { MdLogout, MdHome, MdPeople } from "react-icons/md"
+import { MdLogout, MdHome, MdPeople, MdAssignment } from "react-icons/md"
 import Perfil from "../utils/perfil"
 import { signOutUser } from "../utils/supaAuth"
 import { hasPermiso } from "../utils/supa"
@@ -12,6 +12,7 @@ export default function UserLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [navItems, setNavItems] = useState([
     { label: "Inicio", icon: <MdHome size={18} />, href: "/" },
+    { label: "Tareas", icon: <MdAssignment size={18} />, href: "/tareas" },
   ])
   const router = useRouter()
   const pathname = usePathname()
