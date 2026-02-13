@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation'
 import Perfil from './perfil'
 import { createClient } from '@supabase/supabase-js'
+import { updateProfile } from './supa'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_dbUrl, process.env.NEXT_PUBLIC_dbKey)
 
@@ -18,7 +19,7 @@ async function signInUser(user, password) {
   } else {
     console.log('User logged in successfully:', data)
     Perfil().setToken(data.session.access_token, data.user.id)
-    redirect("/")
+    Perfil().setName(user)
     return data.user
   }
 }
@@ -34,13 +35,13 @@ async function changePassword(newUser, newPassword) {
     return null
   } else {
     console.log('Password changed successfully:', data.user)
-    alert("Contraseña cambiada exitosamente")
     return data.user
   }
 }
 
 async function signOutUser() {
   await supabase.auth.signOut()
+  Perfil().clear()
 }
 
 export {
