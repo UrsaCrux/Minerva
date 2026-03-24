@@ -2,9 +2,8 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
-import { MdLogout, MdHome, MdPeople, MdAssignment } from "react-icons/md"
-import Perfil from "../utils/perfil"
-import ProfileAvatar from "../components/ProfileAvatar"
+import { MdHome, MdPeople, MdAssignment } from "react-icons/md"
+import UserProfilePopup from "../components/UserProfilePopup"
 import { signOutUser } from "../utils/supaAuth"
 import { hasPermiso } from "../utils/supa"
 import "@/app/dashboard.css"
@@ -17,7 +16,7 @@ export default function UserLayout({ children }) {
   ])
   const router = useRouter()
   const pathname = usePathname()
-  const userName = Perfil().getName() || "Usuario"
+
 
   useEffect(() => {
     async function checkPermisos() {
@@ -60,17 +59,7 @@ export default function UserLayout({ children }) {
           <span className="dashboard_header_title">Minerva</span>
         </div>
         <div className="dashboard_header_right">
-          <div className="dashboard_profile_section">
-            <ProfileAvatar />
-            <span className="dashboard_username">{userName}</span>
-          </div>
-          <button
-            className="dashboard_signout"
-            onClick={handleSignOut}
-            title="Cerrar sesión"
-          >
-            <MdLogout size={20} />
-          </button>
+          <UserProfilePopup onSignOut={handleSignOut} />
         </div>
       </header>
 

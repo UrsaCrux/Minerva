@@ -24,10 +24,9 @@ async function signInUser(user, password) {
   }
 }
 
-async function changePassword(newUser, newPassword) {
+async function changePassword(newPassword) {
   const { data, error } = await supabase.auth.updateUser({
     password: newPassword,
-    email: newUser + "@ursacrux.cl"
   })
   if (error) {
     console.error('Password change error:', error.message)

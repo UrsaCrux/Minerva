@@ -280,4 +280,77 @@ export async function addProfilesToTask(taskId, profileIds) {
     return { error }
 }
 
+/**
+ * Fetches the team membership for a user, including team name.
+ * @param {string} userId
+ * @returns {Promise<{team: object|null, error: object|null}>}
+ */
+export async function getUserTeam(userId) {
+    const { data, error } = await supaClient
+        .from("team_members")
+        .select("role, teams(id, name)")
+        .eq("user_id", userId)
+        .maybeSingle()
+    return { team: data ?? null, error: error ?? null }
+}
+
+/**
+ * Fetches all team memberships for a user, including team id and name.
+ * @param {string} userId
+ * @returns {Promise<{teams: object[], error: object|null}>}
+ */
+export async function getUserTeams(userId) {
+    const { data, error } = await supaClient
+        .from("team_members")
+        .select("role, teams(id, name)")
+        .eq("user_id", userId)
+    return { teams: data ?? [], error: error ?? null }
+}
+
+/**
+ * Adds a user to a team.
+ * @param {string} userId
+ * @param {number} teamId
+ * @param {string} [role="miembro"]
+ */
+export async function addUserTeam(userId, teamId, role = "miembro") {
+    const { data, error } = await supaClient
+        .from("team_members")
+        .insert({ user_id: userId, team_id: teamId, role })
+        .select("role, teams(id, name)")
+        .single()
+    return { data, error }
+}
+
+/**
+ * Updates the role of a user in a team.
+ * @param {string} userId
+ * @param {number} teamId
+ * @param {string} role
+ */
+export async function updateUserTeamRole(userId, teamId, role) {
+    const { data, error } = await supaClient
+        .from("team_members")
+        .update({ role })
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .select("role, teams(id, name)")
+        .single()
+    return { data, error }
+}
+
+/**
+ * Removes a user from a team.
+ * @param {string} userId
+ * @param {number} teamId
+ */
+export async function removeUserTeam(userId, teamId) {
+    const { error } = await supaClient
+        .from("team_members")
+        .delete()
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+    return { error }
+}
+
 export { supaClient }
