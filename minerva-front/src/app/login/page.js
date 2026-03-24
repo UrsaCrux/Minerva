@@ -29,11 +29,11 @@ export default function Login() {
     // First-login setup modal state
     const [showSetup, setShowSetup] = useState(false)
     const [setupLoading, setSetupLoading] = useState(false)
-    const [newUsername, setNewUsername] = useState("")
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [setupError, setSetupError] = useState("")
     const [loggedUserId, setLoggedUserId] = useState(null)
+    const [loggedUserEmail, setLoggedUserEmail] = useState(null)
 
     const router = useRouter()
 
@@ -56,10 +56,11 @@ export default function Login() {
         if (profile && !profile.first_login) {
             // First login — show setup modal
             setLoggedUserId(user.id)
+            setLoggedUserEmail(user.email)
             setShowSetup(true)
         } else {
             // Returning user — store full_name and go to dashboard
-            Perfil().setName(profile.full_name)
+            Perfil().setName(profile.username)
             router.replace("/")
         }
     }
@@ -67,10 +68,6 @@ export default function Login() {
     const handleSetupSubmit = async () => {
         setSetupError("")
 
-        if (newUsername.length < 4) {
-            setSetupError("El nombre de usuario debe tener al menos 4 caracteres.")
-            return
-        }
         if (newPassword.length < 8) {
             setSetupError("La contraseña debe tener al menos 8 caracteres.")
             return
@@ -80,14 +77,17 @@ export default function Login() {
             return
         }
 
+        // Derive username from the auth email prefix (e.g. john.doe@ursacrux.cl → john.doe)
+        const derivedUsername = loggedUserEmail ? loggedUserEmail.split("@")[0] : username
+
         setSetupLoading(true)
         try {
             // Update password via auth
-            await changePassword(newUsername, newPassword)
+            await changePassword(newPassword)
 
             // Update profile with username and first_login
             const { error } = await updateProfile(loggedUserId, {
-                username: newUsername,
+                username: derivedUsername,
                 first_login: new Date().toISOString(),
             })
 
@@ -97,7 +97,7 @@ export default function Login() {
                 return
             }
 
-            Perfil().setName(newUsername)
+            Perfil().setName(derivedUsername)
             router.replace("/")
         } catch (err) {
             setSetupError("Ocurrió un error inesperado.")
@@ -119,17 +119,9 @@ export default function Login() {
                         Configuración inicial
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 3, color: "#666" }}>
-                        Es tu primer inicio de sesión. Crea un nombre de usuario y una nueva contraseña para continuar.
+                        Es tu primer inicio de sesión. Crea una nueva contraseña para continuar.
                     </Typography>
                     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                        <TextField
-                            label="Nombre de usuario"
-                            variant="standard"
-                            size="small"
-                            value={newUsername}
-                            onChange={(e) => setNewUsername(e.target.value)}
-                            helperText="Mínimo 4 caracteres"
-                        />
                         <TextField
                             label="Nueva contraseña"
                             type="password"
@@ -185,6 +177,7 @@ export default function Login() {
                     size="small"
                     value={passwordUsuario}
                     onChange={(e) => { setPasswordUsuario(e.target.value) }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !loading) handleLogin() }}
                 />
                 <Button variant="outlined" disabled={loading} onClick={handleLogin}>Ingresar</Button>
                 {loading && (

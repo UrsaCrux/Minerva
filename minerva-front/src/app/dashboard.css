@@ -318,3 +318,308 @@
     font-size: 0.8rem;
     color: #777;
 }
+
+/* ── User Profile Popup ── */
+.profile_popup_root {
+    position: relative;
+}
+
+/* Trigger pill */
+.profile_popup_trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px 5px 5px;
+    border: 1px solid #e0e0e0;
+    border-radius: 24px;
+    background: #fff;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.profile_popup_trigger:hover,
+.profile_popup_trigger.active {
+    background-color: #f5f5f5;
+    border-color: #c8c8c8;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.profile_popup_trigger_avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.profile_popup_trigger_name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile_popup_trigger_chevron {
+    font-size: 0.6rem;
+    color: #999;
+    margin-left: 2px;
+}
+
+/* Floating panel */
+.profile_popup_panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 290px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    z-index: 200;
+    padding: 16px;
+    animation: popup_fadein 0.15s ease;
+}
+
+@keyframes popup_fadein {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Info block */
+.profile_popup_info_block {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+/* Avatar (large) in popup */
+.profile_popup_avatar_wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e0e0e0;
+}
+
+.profile_popup_avatar_placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.profile_popup_avatar_wrap:hover .profile_popup_avatar_overlay {
+    opacity: 1;
+}
+
+.profile_popup_avatar_overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.38);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.18s;
+    border-radius: 50%;
+}
+
+.profile_popup_spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+/* Text info */
+.profile_popup_text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 4px;
+}
+
+.profile_popup_fullname {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile_popup_meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile_popup_meta span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Divider */
+.profile_popup_divider {
+    height: 1px;
+    background: #eeeeee;
+    margin: 12px 0;
+}
+
+/* Section toggle button (for password) */
+.profile_popup_section_toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #444;
+    border-radius: 6px;
+    transition: background-color 0.12s;
+    text-align: left;
+}
+
+.profile_popup_section_toggle:hover {
+    background-color: #f5f5f5;
+}
+
+.profile_popup_toggle_chevron {
+    margin-left: auto;
+    font-size: 0.6rem;
+    color: #999;
+}
+
+/* Password form */
+.profile_popup_pw_form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 0 2px;
+}
+
+.profile_popup_input_wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile_popup_input {
+    width: 100%;
+    padding: 8px 36px 8px 10px;
+    border: 1px solid #d8d8d8;
+    border-radius: 7px;
+    font-size: 0.83rem;
+    color: #333;
+    background: #fafafa;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.profile_popup_input:focus {
+    border-color: #888;
+    background: #fff;
+}
+
+.profile_popup_pw_eye {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+}
+
+.profile_popup_pw_msg {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    padding: 5px 8px;
+    border-radius: 5px;
+}
+
+.profile_popup_pw_msg.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.profile_popup_pw_msg.error {
+    background: #fdecea;
+    color: #b71c1c;
+}
+
+.profile_popup_pw_submit {
+    padding: 8px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.profile_popup_pw_submit:hover:not(:disabled) {
+    background: #333;
+}
+
+.profile_popup_pw_submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Sign out button */
+.profile_popup_signout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #c0392b;
+    border-radius: 6px;
+    transition: background-color 0.12s;
+    font-weight: 500;
+}
+
+.profile_popup_signout:hover {
+    background-color: #fdf0ef;
+}

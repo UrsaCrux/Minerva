@@ -10,7 +10,8 @@ import {
 import { MdEdit, MdAdd, MdDelete } from "react-icons/md"
 import {
     hasPermiso, getAllProfiles, getPermisosUsuarios,
-    updateProfile, setPermisoUsuario, deletePermisoUsuario, createUser
+    updateProfile, setPermisoUsuario, deletePermisoUsuario, createUser,
+    getTeams, getUserTeams, addUserTeam, removeUserTeam
 } from "../../utils/supa"
 
 const PERMISOS_MAP = {
@@ -31,6 +32,11 @@ export default function UsuariosPage() {
     const [editFullName, setEditFullName] = useState("")
     const [editUsername, setEditUsername] = useState("")
     const [editEmail, setEditEmail] = useState("")
+
+    // Teams
+    const [allTeams, setAllTeams] = useState([])
+    const [editUserTeams, setEditUserTeams] = useState([])
+    const [editSelectedTeam, setEditSelectedTeam] = useState("")
 
     // Permiso dialog
     const [permisoOpen, setPermisoOpen] = useState(false)
@@ -60,12 +66,14 @@ export default function UsuariosPage() {
 
     async function loadData() {
         setLoading(true)
-        const [profilesRes, permisosRes] = await Promise.all([
+        const [profilesRes, permisosRes, teamsRes] = await Promise.all([
             getAllProfiles(),
             getPermisosUsuarios(),
+            getTeams(),
         ])
         setProfiles(profilesRes.profiles)
         setPermisos(permisosRes.permisos)
+        setAllTeams(teamsRes.teams)
         setLoading(false)
     }
 
@@ -74,11 +82,14 @@ export default function UsuariosPage() {
     }
 
     // Edit profile handlers
-    function openEdit(user) {
+    async function openEdit(user) {
         setEditUser(user)
         setEditFullName(user.full_name || "")
         setEditUsername(user.username || "")
         setEditEmail(user.email || "")
+        setEditSelectedTeam("")
+        const { teams } = await getUserTeams(user.id)
+        setEditUserTeams(teams)
         setEditOpen(true)
     }
 
@@ -90,6 +101,22 @@ export default function UsuariosPage() {
         })
         setEditOpen(false)
         await loadData()
+    }
+
+    // Team handlers for edit dialog
+    async function handleAddTeam() {
+        if (!editSelectedTeam || !editUser) return
+        await addUserTeam(editUser.id, Number(editSelectedTeam))
+        const { teams } = await getUserTeams(editUser.id)
+        setEditUserTeams(teams)
+        setEditSelectedTeam("")
+    }
+
+    async function handleRemoveTeam(teamId) {
+        if (!editUser) return
+        await removeUserTeam(editUser.id, teamId)
+        const { teams } = await getUserTeams(editUser.id)
+        setEditUserTeams(teams)
     }
 
     // Permiso handlers
@@ -230,6 +257,42 @@ export default function UsuariosPage() {
                         variant="standard"
                         size="small"
                     />
+
+                    {/* Team editing */}
+                    <Typography variant="subtitle2" sx={{ mt: 2, mb: 0.5 }}>
+                        Equipos
+                    </Typography>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
+                        {editUserTeams.length === 0 && (
+                            <Typography variant="body2" color="text.secondary">Sin equipos asignados</Typography>
+                        )}
+                        {editUserTeams.map(tm => (
+                            <Chip
+                                key={tm.teams.id}
+                                label={tm.teams.name}
+                                size="small"
+                                onDelete={() => handleRemoveTeam(tm.teams.id)}
+                            />
+                        ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                        <FormControl variant="standard" size="small" sx={{ flex: 1 }}>
+                            <InputLabel>Agregar equipo</InputLabel>
+                            <Select
+                                value={editSelectedTeam}
+                                onChange={(e) => setEditSelectedTeam(e.target.value)}
+                            >
+                                {allTeams
+                                    .filter(t => !editUserTeams.some(ut => ut.teams.id === t.id))
+                                    .map(t => (
+                                        <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
+                                    ))}
+                            </Select>
+                        </FormControl>
+                        <Button size="small" onClick={handleAddTeam} disabled={!editSelectedTeam}>
+                            Agregar
+                        </Button>
+                    </div>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setEditOpen(false)}>Cancelar</Button>
