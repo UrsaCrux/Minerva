@@ -11,7 +11,7 @@ import { MdEdit, MdAdd, MdDelete } from "react-icons/md"
 import {
     hasPermiso, getAllProfiles, getPermisosUsuarios,
     updateProfile, setPermisoUsuario, deletePermisoUsuario, createUser,
-    getTeams, getUserTeams, addUserTeam, removeUserTeam
+    getTeams, getUserTeams, addUserTeam, removeUserTeam, updateUserTeamRole
 } from "../../utils/supa"
 
 const PERMISOS_MAP = {
@@ -37,6 +37,9 @@ export default function UsuariosPage() {
     const [allTeams, setAllTeams] = useState([])
     const [editUserTeams, setEditUserTeams] = useState([])
     const [editSelectedTeam, setEditSelectedTeam] = useState("")
+    const [editSelectedRole, setEditSelectedRole] = useState("miembro")
+    // teamId -> "" (closed) | "editing" (role select open)
+    const [editingRoleFor, setEditingRoleFor] = useState(null)
 
     // Permiso dialog
     const [permisoOpen, setPermisoOpen] = useState(false)
@@ -104,12 +107,23 @@ export default function UsuariosPage() {
     }
 
     // Team handlers for edit dialog
+    const ROLES = ["miembro", "lider", "subcomandante", "comandante"]
+
     async function handleAddTeam() {
         if (!editSelectedTeam || !editUser) return
-        await addUserTeam(editUser.id, Number(editSelectedTeam))
+        await addUserTeam(editUser.id, Number(editSelectedTeam), editSelectedRole)
         const { teams } = await getUserTeams(editUser.id)
         setEditUserTeams(teams)
         setEditSelectedTeam("")
+        setEditSelectedRole("miembro")
+    }
+
+    async function handleUpdateTeamRole(teamId, newRole) {
+        if (!editUser) return
+        await updateUserTeamRole(editUser.id, teamId, newRole)
+        const { teams } = await getUserTeams(editUser.id)
+        setEditUserTeams(teams)
+        setEditingRoleFor(null)
     }
 
     async function handleRemoveTeam(teamId) {
@@ -267,12 +281,38 @@ export default function UsuariosPage() {
                             <Typography variant="body2" color="text.secondary">Sin equipos asignados</Typography>
                         )}
                         {editUserTeams.map(tm => (
-                            <Chip
-                                key={tm.teams.id}
-                                label={tm.teams.name}
-                                size="small"
-                                onDelete={() => handleRemoveTeam(tm.teams.id)}
-                            />
+                            <div key={tm.teams.id} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                                {editingRoleFor === tm.teams.id ? (
+                                    <>
+                                        <Chip
+                                            label={tm.teams.name}
+                                            size="small"
+                                            onDelete={() => handleRemoveTeam(tm.teams.id)}
+                                        />
+                                        <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
+                                            <Select
+                                                value={tm.role}
+                                                onChange={(e) => handleUpdateTeamRole(tm.teams.id, e.target.value)}
+                                                autoFocus
+                                                onClose={() => setEditingRoleFor(null)}
+                                            >
+                                                {ROLES.map(r => (
+                                                    <MenuItem key={r} value={r}>{r}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </>
+                                ) : (
+                                    <Chip
+                                        key={tm.teams.id}
+                                        label={`${tm.teams.name} · ${tm.role}`}
+                                        size="small"
+                                        onClick={() => setEditingRoleFor(tm.teams.id)}
+                                        onDelete={() => handleRemoveTeam(tm.teams.id)}
+                                        title="Clic para cambiar rol"
+                                    />
+                                )}
+                            </div>
                         ))}
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
@@ -287,6 +327,17 @@ export default function UsuariosPage() {
                                     .map(t => (
                                         <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
                                     ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
+                            <InputLabel>Rol</InputLabel>
+                            <Select
+                                value={editSelectedRole}
+                                onChange={(e) => setEditSelectedRole(e.target.value)}
+                            >
+                                {ROLES.map(r => (
+                                    <MenuItem key={r} value={r}>{r}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                         <Button size="small" onClick={handleAddTeam} disabled={!editSelectedTeam}>

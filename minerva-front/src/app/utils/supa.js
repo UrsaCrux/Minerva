@@ -311,11 +311,29 @@ export async function getUserTeams(userId) {
  * Adds a user to a team.
  * @param {string} userId
  * @param {number} teamId
+ * @param {string} [role="miembro"]
  */
-export async function addUserTeam(userId, teamId) {
+export async function addUserTeam(userId, teamId, role = "miembro") {
     const { data, error } = await supaClient
         .from("team_members")
-        .insert({ user_id: userId, team_id: teamId })
+        .insert({ user_id: userId, team_id: teamId, role })
+        .select("role, teams(id, name)")
+        .single()
+    return { data, error }
+}
+
+/**
+ * Updates the role of a user in a team.
+ * @param {string} userId
+ * @param {number} teamId
+ * @param {string} role
+ */
+export async function updateUserTeamRole(userId, teamId, role) {
+    const { data, error } = await supaClient
+        .from("team_members")
+        .update({ role })
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
         .select("role, teams(id, name)")
         .single()
     return { data, error }
