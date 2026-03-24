@@ -16,6 +16,7 @@ import {
 const PERMISOS_MAP = {
     1: "Editar usuarios",
     2: "Crear eventos en calendario",
+    3: "Control sobre tareas",
 }
 
 export default function UsuariosPage() {

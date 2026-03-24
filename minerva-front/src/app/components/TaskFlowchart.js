@@ -17,6 +17,19 @@ const TEAM_COLORS = {
     default: "#94a3b8" // Gray
 }
 
+// Priority color bands
+const PRIORITY_COLORS = {
+    "1": "#ef4444", // Alta - Red
+    "2": "#f97316", // Media - Orange
+    "3": "#eab308", // Baja - Yellow
+    default: "#cbd5e1" // Sin prioridad - Light gray
+}
+
+function getPriorityBorder(priority) {
+    const color = PRIORITY_COLORS[String(priority)] || PRIORITY_COLORS.default
+    return `10px solid ${color}`
+}
+
 
 
 export default function TaskFlowchart() {
@@ -62,6 +75,7 @@ export default function TaskFlowchart() {
                 background: TEAM_COLORS[task.team_id] || TEAM_COLORS.default,
                 color: '#fff',
                 border: '1px solid #333',
+                borderLeft: getPriorityBorder(task.priority),
                 width: 180
             },
         }))
@@ -115,6 +129,7 @@ export default function TaskFlowchart() {
                         background: TEAM_COLORS[p.team_id] || TEAM_COLORS.default,
                         color: '#fff',
                         border: '1px solid #333',
+                        borderLeft: getPriorityBorder(p.priority),
                         width: 180
                     }
                 })
@@ -243,6 +258,7 @@ export default function TaskFlowchart() {
                                             background: TEAM_COLORS[newTask.team_id] || TEAM_COLORS.default,
                                             color: '#fff',
                                             border: '1px solid #333',
+                                            borderLeft: getPriorityBorder(newTask.priority),
                                             width: 180
                                         }
                                     }
@@ -263,6 +279,7 @@ export default function TaskFlowchart() {
                                         background: TEAM_COLORS[newTask.team_id] || TEAM_COLORS.default,
                                         color: '#fff',
                                         border: '1px solid #333',
+                                        borderLeft: getPriorityBorder(newTask.priority),
                                         width: 180
                                     }
                                 }
