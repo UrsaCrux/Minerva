@@ -228,7 +228,7 @@ export async function getTeams() {
 export async function getGoalTasks() {
     const { data, error } = await supaClient
         .from("tasks")
-        .select("*")
+        .select("*, assigned_to_profile:assigned_to(id, full_name, username, avatar_url), tasks_profiles(id_profile, profiles:id_profile(id, full_name, username, avatar_url))")
         .is("desbloquea", null)
         .order("created_at")
     return { tasks: data ?? [], error }
@@ -241,7 +241,7 @@ export async function getGoalTasks() {
 export async function getPrerequisiteTasks(unlockedTaskId) {
     const { data, error } = await supaClient
         .from("tasks")
-        .select("*")
+        .select("*, assigned_to_profile:assigned_to(id, full_name, username, avatar_url), tasks_profiles(id_profile, profiles:id_profile(id, full_name, username, avatar_url))")
         .eq("desbloquea", unlockedTaskId)
         .order("created_at")
     return { tasks: data ?? [], error }
@@ -261,12 +261,55 @@ export async function createTask(taskData) {
 }
 
 /**
+ * Updates an existing task. RLS will determine if the user has permission.
+ * @param {number} taskId
+ * @param {object} updates - fields to update
+ */
+export async function updateTask(taskId, updates) {
+    const { data, error } = await supaClient
+        .from("tasks")
+        .update(updates)
+        .eq("id", taskId)
+        .select("*, assigned_to_profile:assigned_to(id, full_name, username, avatar_url), tasks_profiles(id_profile, profiles:id_profile(id, full_name, username, avatar_url))")
+    return { task: data?.[0] ?? null, error }
+}
+
+/**
  * Adds multiple profiles to a task (tasks_profiles).
  * @param {number} taskId
  * @param {string[]} profileIds
  */
 export async function addProfilesToTask(taskId, profileIds) {
     if (!profileIds || profileIds.length === 0) return { error: null }
+
+    const rows = profileIds.map(pid => ({
+        id_task: taskId,
+        id_profile: pid
+    }))
+
+    const { error } = await supaClient
+        .from("tasks_profiles")
+        .insert(rows)
+
+    return { error }
+}
+
+/**
+ * Syncs the participants of a task: removes all existing and inserts the new list.
+ * @param {number} taskId
+ * @param {string[]} profileIds
+ */
+export async function syncTaskProfiles(taskId, profileIds) {
+    // Delete all existing
+    const { error: delError } = await supaClient
+        .from("tasks_profiles")
+        .delete()
+        .eq("id_task", taskId)
+
+    if (delError) return { error: delError }
+
+    // Insert new list
+    if (profileIds.length === 0) return { error: null }
 
     const rows = profileIds.map(pid => ({
         id_task: taskId,
@@ -351,6 +394,19 @@ export async function removeUserTeam(userId, teamId) {
         .eq("user_id", userId)
         .eq("team_id", teamId)
     return { error }
+}
+
+/**
+ * Fetches all progresos for a given task, with creator profile info.
+ * @param {number} taskId
+ */
+export async function getTaskProgresos(taskId) {
+    const { data, error } = await supaClient
+        .from("progresos")
+        .select("*, profiles:created_by(full_name, username, avatar_url)")
+        .eq("id_task", taskId)
+        .order("created_at", { ascending: false })
+    return { progresos: data ?? [], error }
 }
 
 export { supaClient }

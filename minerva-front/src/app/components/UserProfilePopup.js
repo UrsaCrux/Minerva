@@ -30,10 +30,10 @@ export default function UserProfilePopup({ onSignOut }) {
 
     // Fetch profile + team when popup opens
     useEffect(() => {
-        if (open && id_usuario) {
+        if (id_usuario) {
             fetchData()
         }
-    }, [open, id_usuario])
+    }, [id_usuario])
 
     async function fetchData() {
         const [{ profile: p }, { team: t }] = await Promise.all([

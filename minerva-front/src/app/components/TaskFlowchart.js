@@ -1,11 +1,12 @@
 "use client"
-import { useEffect, useState, useRef, useCallback } from "react"
-import { getGoalTasks, getPrerequisiteTasks, getTeams, createTask, hasPermiso, getAllProfiles, addProfilesToTask } from "../utils/supa"
-import { MdAdd, MdClose } from "react-icons/md"
+import { useEffect, useState, useRef, useCallback, useMemo } from "react"
+import { getGoalTasks, getPrerequisiteTasks, getTeams, createTask, updateTask, hasPermiso, getAllProfiles, addProfilesToTask, syncTaskProfiles, getTaskProgresos } from "../utils/supa"
+import { MdAdd, MdClose, MdVisibility, MdEdit } from "react-icons/md"
 import Perfil from "../utils/perfil"
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
+import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Chip, OutlinedInput, Box } from "@mui/material"
+import '../tareas.css';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Chip, OutlinedInput, Box, CircularProgress } from "@mui/material"
 
 // Hardcoded colors for teams (since teams table doesn't have color column)
 const TEAM_COLORS = {
@@ -30,7 +31,203 @@ function getPriorityBorder(priority) {
     return `10px solid ${color}`
 }
 
+function getInitials(name) {
+    if (!name) return "?"
+    return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
+}
 
+// Collect unique profiles from assigned_to + tasks_profiles
+function getTaskAvatars(task) {
+    const map = new Map()
+    if (task.assigned_to_profile) {
+        const p = task.assigned_to_profile
+        map.set(p.id, p)
+    }
+    if (task.tasks_profiles) {
+        task.tasks_profiles.forEach(tp => {
+            const p = tp.profiles
+            if (p && !map.has(p.id)) map.set(p.id, p)
+        })
+    }
+    return Array.from(map.values())
+}
+
+// ── Custom Node Component ──
+function TaskNode({ data }) {
+    const [hovered, setHovered] = useState(false)
+    const [showProgresos, setShowProgresos] = useState(false)
+    const [progresos, setProgresos] = useState([])
+    const [loadingProgresos, setLoadingProgresos] = useState(false)
+    const [showEditModal, setShowEditModal] = useState(false)
+    const hoverTimeout = useRef(null)
+
+    const task = data.task
+    const avatars = getTaskAvatars(task)
+    const MAX_AVATARS = 4
+
+    const bgColor = TEAM_COLORS[task.team_id] || TEAM_COLORS.default
+
+    function handleMouseEnter() {
+        clearTimeout(hoverTimeout.current)
+        setHovered(true)
+    }
+
+    function handleMouseLeave() {
+        hoverTimeout.current = setTimeout(() => setHovered(false), 200)
+    }
+
+    async function handleViewDetails(e) {
+        e.stopPropagation()
+        setHovered(false)
+        setShowProgresos(true)
+        setLoadingProgresos(true)
+        const { progresos: data } = await getTaskProgresos(task.id)
+        setProgresos(data)
+        setLoadingProgresos(false)
+    }
+
+    function handleEdit(e) {
+        e.stopPropagation()
+        setHovered(false)
+        setShowEditModal(true)
+    }
+
+    return (
+        <>
+            <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
+            <div
+                className="flowchart_node"
+                style={{
+                    background: bgColor,
+                    borderLeft: getPriorityBorder(task.priority),
+                }}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
+                <div className="flowchart_node_title">{task.title}</div>
+                {avatars.length > 0 && (
+                    <div className="flowchart_node_avatars">
+                        {avatars.slice(0, MAX_AVATARS).map(p => (
+                            <div key={p.id} className="flowchart_avatar" title={p.full_name || p.username || "Usuario"}>
+                                {p.avatar_url ? (
+                                    <img src={p.avatar_url} alt={p.full_name || "Avatar"} />
+                                ) : (
+                                    getInitials(p.full_name || p.username)
+                                )}
+                            </div>
+                        ))}
+                        {avatars.length > MAX_AVATARS && (
+                            <div className="flowchart_avatar_more">
+                                +{avatars.length - MAX_AVATARS}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Hover Tooltip */}
+                {hovered && (
+                    <div
+                        className="flowchart_tooltip"
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                    >
+                        <button className="flowchart_tooltip_edit_icon" onClick={handleEdit} title="Editar tarea">
+                            <MdEdit size={14} />
+                        </button>
+                        <div className="flowchart_tooltip_title">{task.title}</div>
+                        {task.description && (
+                            <div className="flowchart_tooltip_desc">{task.description}</div>
+                        )}
+                        <div className="flowchart_tooltip_assigned">
+                            <span>Asignado a:</span>
+                            <strong>
+                                {task.assigned_to_profile
+                                    ? (task.assigned_to_profile.full_name || task.assigned_to_profile.username)
+                                    : "Sin asignar"
+                                }
+                            </strong>
+                        </div>
+                        <Button variant="outlined" color="primary" className="flowchart_tooltip_tn" onClick={handleViewDetails}>
+                            Ver Detalles
+                        </Button>
+                    </div>
+                )}
+            </div>
+            <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
+
+            {/* Progresos Dialog */}
+            {showProgresos && (
+                <ProgresosDialog
+                    task={task}
+                    progresos={progresos}
+                    loading={loadingProgresos}
+                    onClose={() => setShowProgresos(false)}
+                />
+            )}
+
+            {/* Edit Task Dialog */}
+            {showEditModal && (
+                <EditTaskModal
+                    task={task}
+                    teams={data.teams || []}
+                    profiles={data.profiles || []}
+                    onClose={() => setShowEditModal(false)}
+                    onUpdated={(updatedTask) => {
+                        setShowEditModal(false)
+                        if (data.onTaskUpdated) data.onTaskUpdated(updatedTask)
+                    }}
+                />
+            )}
+        </>
+    )
+}
+
+// ── Progresos Dialog ──
+function ProgresosDialog({ task, progresos, loading, onClose }) {
+    return (
+        <Dialog open={true} onClose={onClose} fullWidth maxWidth="sm">
+            <DialogTitle style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Progresos — {task.title}</span>
+                <MdClose style={{ cursor: "pointer", fontSize: "1.2rem" }} onClick={onClose} />
+            </DialogTitle>
+            <DialogContent>
+                {loading ? (
+                    <div style={{ display: "flex", justifyContent: "center", padding: 32 }}>
+                        <CircularProgress size={32} />
+                    </div>
+                ) : progresos.length === 0 ? (
+                    <div className="progreso_empty">No hay progresos registrados.</div>
+                ) : (
+                    <div className="progreso_list">
+                        {progresos.map(p => (
+                            <div key={p.id} className="progreso_card">
+                                <div className="progreso_card_title">{p.titulo || "Sin título"}</div>
+                                {p.descripcion && (
+                                    <div className="progreso_card_desc">{p.descripcion}</div>
+                                )}
+                                <div className="progreso_card_meta">
+                                    <div className="progreso_card_author">
+                                        {p.profiles?.avatar_url && (
+                                            <img src={p.profiles.avatar_url} alt="" />
+                                        )}
+                                        <span>{p.profiles?.full_name || p.profiles?.username || "Usuario"}</span>
+                                    </div>
+                                    <span>{new Date(p.created_at).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </DialogContent>
+            <DialogActions style={{ padding: "12px 24px" }}>
+                <Button onClick={onClose} variant="outlined" color="inherit">Cerrar</Button>
+            </DialogActions>
+        </Dialog>
+    )
+}
+
+// Define nodeTypes outside the component to prevent React re-renders
+const nodeTypes = { taskNode: TaskNode }
 
 export default function TaskFlowchart() {
     const [tasks, setTasks] = useState([])
@@ -55,30 +252,47 @@ export default function TaskFlowchart() {
         setCanCreateGoal(has)
     }
 
-    async function loadInitialData() {
-        const { teams } = await getTeams()
-        setTeams(teams)
+    function handleTaskUpdated(updatedTask) {
+        // Update the node data in-place so the flowchart reflects the edit
+        setNodes(nds => nds.map(n => {
+            if (n.id === updatedTask.id.toString()) {
+                return {
+                    ...n,
+                    data: { ...n.data, label: updatedTask.title, task: updatedTask },
+                }
+            }
+            return n
+        }))
+        setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t))
+    }
 
-        const { profiles } = await getAllProfiles()
-        setProfiles(profiles)
+    function buildNode(task, position, teamsData, profilesData) {
+        return {
+            id: task.id.toString(),
+            type: 'taskNode',
+            position,
+            data: {
+                label: task.title,
+                task,
+                teams: teamsData || teams,
+                profiles: profilesData || profiles,
+                onTaskUpdated: handleTaskUpdated
+            },
+        }
+    }
+
+    async function loadInitialData() {
+        const { teams: loadedTeams } = await getTeams()
+        setTeams(loadedTeams)
+
+        const { profiles: loadedProfiles } = await getAllProfiles()
+        setProfiles(loadedProfiles)
 
         const { tasks: goals } = await getGoalTasks()
         setTasks(goals)
 
-        // Map goals to nodes
-        const initialNodes = goals.map((task, index) => ({
-            id: task.id.toString(),
-            // Position goals horizontally at y=0 (Top)
-            position: { x: index * 250, y: 0 },
-            data: { label: task.title, task: task },
-            style: {
-                background: TEAM_COLORS[task.team_id] || TEAM_COLORS.default,
-                color: '#fff',
-                border: '1px solid #333',
-                borderLeft: getPriorityBorder(task.priority),
-                width: 180
-            },
-        }))
+        // Map goals to nodes — pass loaded data directly since state hasn't updated yet
+        const initialNodes = goals.map((task, index) => buildNode(task, { x: index * 250, y: 0 }, loadedTeams, loadedProfiles))
         setNodes(initialNodes)
     }
 
@@ -95,7 +309,7 @@ export default function TaskFlowchart() {
         [],
     );
 
-    const onNodeClick = useCallback(async (event, node) => {
+    const onNodeClick = async (event, node) => {
         const task = node.data.task
         if (!task) return
         setSelectedTask(task)
@@ -106,33 +320,18 @@ export default function TaskFlowchart() {
 
         setNodes((nds) => {
             const newNodes = []
-            let existingNodesCount = 0
 
             // Check which prereqs are already in the graph
             prereqs.forEach((p, idx) => {
                 if (nds.find(n => n.id === p.id.toString())) {
-                    existingNodesCount++
                     return
                 }
 
                 // Position new nodes BELOW the target
-                newNodes.push({
-                    id: p.id.toString(),
-                    position: {
-                        // Spread horizontally
-                        x: node.position.x + (idx * 220) - ((prereqs.length - 1) * 110),
-                        // Move down
-                        y: node.position.y + 150
-                    },
-                    data: { label: p.title, task: p },
-                    style: {
-                        background: TEAM_COLORS[p.team_id] || TEAM_COLORS.default,
-                        color: '#fff',
-                        border: '1px solid #333',
-                        borderLeft: getPriorityBorder(p.priority),
-                        width: 180
-                    }
-                })
+                newNodes.push(buildNode(p, {
+                    x: node.position.x + (idx * 220) - ((prereqs.length - 1) * 110),
+                    y: node.position.y + 150
+                }))
             })
             return [...nds, ...newNodes]
         })
@@ -162,7 +361,7 @@ export default function TaskFlowchart() {
             return newTasks
         })
 
-    }, [])
+    }
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 16 }}>
@@ -219,6 +418,7 @@ export default function TaskFlowchart() {
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
+                        nodeTypes={nodeTypes}
                         nodesConnectable={false}
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
@@ -246,23 +446,10 @@ export default function TaskFlowchart() {
 
                                 if (isCreatingGoal) {
                                     // Add new goal node at top level
-                                    // Calculate simple position based on existing top-level nodes count or just append
                                     const topLevelNodes = nodes.filter(n => n.position.y === 0)
                                     const newX = topLevelNodes.length * 250
 
-                                    const newNode = {
-                                        id: newTask.id.toString(),
-                                        position: { x: newX, y: 0 },
-                                        data: { label: newTask.title, task: newTask },
-                                        style: {
-                                            background: TEAM_COLORS[newTask.team_id] || TEAM_COLORS.default,
-                                            color: '#fff',
-                                            border: '1px solid #333',
-                                            borderLeft: getPriorityBorder(newTask.priority),
-                                            width: 180
-                                        }
-                                    }
-                                    setNodes(prev => [...prev, newNode])
+                                    setNodes(prev => [...prev, buildNode(newTask, { x: newX, y: 0 })])
                                     return
                                 }
 
@@ -271,19 +458,7 @@ export default function TaskFlowchart() {
                                 const targetPos = targetNode ? targetNode.position : { x: 0, y: 0 }
 
                                 // Add new node BELOW
-                                const newNode = {
-                                    id: newTask.id.toString(),
-                                    position: { x: targetPos.x, y: targetPos.y + 150 },
-                                    data: { label: newTask.title, task: newTask },
-                                    style: {
-                                        background: TEAM_COLORS[newTask.team_id] || TEAM_COLORS.default,
-                                        color: '#fff',
-                                        border: '1px solid #333',
-                                        borderLeft: getPriorityBorder(newTask.priority),
-                                        width: 180
-                                    }
-                                }
-                                setNodes(prev => [...prev, newNode])
+                                setNodes(prev => [...prev, buildNode(newTask, { x: targetPos.x, y: targetPos.y + 150 })])
 
                                 // Add edge
                                 const newEdge = {
@@ -348,6 +523,18 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
                 alert("Tarea creada, pero hubo un error añadiendo participantes.")
             }
         }
+
+        // Enrich task with profile data so avatars render immediately
+        const assignedProfile = assignedTo ? (profiles || []).find(p => p.id === assignedTo) : null
+        task.assigned_to_profile = assignedProfile
+            ? { id: assignedProfile.id, full_name: assignedProfile.full_name, username: assignedProfile.username, avatar_url: assignedProfile.avatar_url }
+            : null
+        task.tasks_profiles = participantIds.map(pid => {
+            const prof = (profiles || []).find(p => p.id === pid)
+            return prof
+                ? { id_profile: pid, profiles: { id: prof.id, full_name: prof.full_name, username: prof.username, avatar_url: prof.avatar_url } }
+                : { id_profile: pid, profiles: null }
+        })
 
         onCreated(task)
     }
@@ -446,6 +633,191 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
                     </Button>
                     <Button type="submit" variant="contained" color="primary">
                         Crear
+                    </Button>
+                </DialogActions>
+            </form>
+        </Dialog>
+    )
+}
+
+function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
+    const [title, setTitle] = useState(task.title || "")
+    const [description, setDescription] = useState(task.description || "")
+    const [status, setStatus] = useState(task.status || "pendiente")
+    const [priority, setPriority] = useState(task.priority ?? "")
+    const [teamId, setTeamId] = useState(task.team_id ?? "")
+    const [assignedTo, setAssignedTo] = useState(task.assigned_to || "")
+    const [dueDate, setDueDate] = useState(task.due_date || "")
+    const [participantIds, setParticipantIds] = useState(
+        (task.tasks_profiles || []).map(tp => tp.id_profile)
+    )
+    const [saving, setSaving] = useState(false)
+    const { id_usuario } = Perfil().getToken()
+
+    async function handleSubmit(e) {
+        e.preventDefault()
+        setSaving(true)
+
+        // 1. Update task fields
+        const { task: updated, error } = await updateTask(task.id, {
+            title,
+            description: description || null,
+            status,
+            priority: priority === "" ? null : Number(priority),
+            team_id: teamId || null,
+            assigned_to: assignedTo || null,
+            due_date: dueDate || null,
+            last_edited_by: id_usuario,
+            updated_at: new Date().toISOString(),
+        })
+
+        if (error) {
+            setSaving(false)
+            console.error(error)
+            if (error.code === "42501") {
+                alert("No tienes permitido editar esta tarea.")
+            } else {
+                alert("Error actualizando la tarea: " + error.message)
+            }
+            return
+        }
+
+        if (!updated) {
+            setSaving(false)
+            alert("No tienes permitido editar esta tarea.")
+            return
+        }
+
+        // 2. Sync participants
+        const { error: syncError } = await syncTaskProfiles(task.id, participantIds)
+        if (syncError) {
+            console.error("Error syncing participants:", syncError)
+            alert("Tarea actualizada, pero hubo un error actualizando participantes.")
+        }
+
+        // Enrich updated task with participant profiles for immediate avatar rendering
+        updated.tasks_profiles = participantIds.map(pid => {
+            const prof = (profiles || []).find(p => p.id === pid)
+            return prof
+                ? { id_profile: pid, profiles: { id: prof.id, full_name: prof.full_name, username: prof.username, avatar_url: prof.avatar_url } }
+                : { id_profile: pid, profiles: null }
+        })
+
+        setSaving(false)
+        onUpdated(updated)
+    }
+
+    return (
+        <Dialog open={true} onClose={onClose} fullWidth maxWidth="sm">
+            <DialogTitle>Editar Tarea</DialogTitle>
+            <form onSubmit={handleSubmit}>
+                <DialogContent style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <TextField
+                        autoFocus
+                        label="Título"
+                        fullWidth
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        label="Descripción"
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={5}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                    />
+                    <FormControl fullWidth>
+                        <InputLabel>Estado</InputLabel>
+                        <Select value={status} label="Estado" onChange={(e) => setStatus(e.target.value)}>
+                            <MenuItem value="pendiente">Pendiente</MenuItem>
+                            <MenuItem value="en_progreso">En Progreso</MenuItem>
+                            <MenuItem value="completado">Completado</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Prioridad</InputLabel>
+                        <Select value={priority} label="Prioridad" onChange={(e) => setPriority(e.target.value)}>
+                            <MenuItem value=""><em>Sin prioridad</em></MenuItem>
+                            <MenuItem value={1}>Alta</MenuItem>
+                            <MenuItem value={2}>Media</MenuItem>
+                            <MenuItem value={3}>Baja</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Equipo</InputLabel>
+                        <Select value={teamId} label="Equipo" onChange={(e) => setTeamId(e.target.value)}>
+                            <MenuItem value=""><em>Sin equipo</em></MenuItem>
+                            {teams.map((t) => (
+                                <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Asignado a</InputLabel>
+                        <Select value={assignedTo} label="Asignado a" onChange={(e) => setAssignedTo(e.target.value)}>
+                            <MenuItem value=""><em>Sin asignar</em></MenuItem>
+                            {profiles.map((p) => (
+                                <MenuItem key={p.id} value={p.id}>{p.full_name || p.username || "Usuario"}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel id="edit-participants-label">Participantes</InputLabel>
+                        <Select
+                            labelId="edit-participants-label"
+                            multiple
+                            value={participantIds}
+                            onChange={(e) => {
+                                const { target: { value } } = e;
+                                setParticipantIds(
+                                    typeof value === 'string' ? value.split(',') : value,
+                                );
+                            }}
+                            input={<OutlinedInput label="Participantes" />}
+                            renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {selected.map((value) => {
+                                        const profile = (profiles || []).find(p => p.id === value)
+                                        return (
+                                            <Chip key={value} label={profile?.full_name || profile?.username || "Usuario"} />
+                                        )
+                                    })}
+                                </Box>
+                            )}
+                            MenuProps={{
+                                PaperProps: {
+                                    style: {
+                                        maxHeight: 224,
+                                        width: 250,
+                                    },
+                                },
+                            }}
+                        >
+                            {(profiles || []).map((p) => (
+                                <MenuItem key={p.id} value={p.id}>
+                                    {p.full_name || p.username || "Usuario"}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        label="Fecha límite"
+                        type="date"
+                        fullWidth
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                </DialogContent>
+                <DialogActions style={{ padding: 24 }}>
+                    <Button onClick={onClose} variant="outlined" color="inherit" disabled={saving}>
+                        Cancelar
+                    </Button>
+                    <Button type="submit" variant="contained" color="primary" disabled={saving}>
+                        {saving ? "Guardando..." : "Guardar"}
                     </Button>
                 </DialogActions>
             </form>
