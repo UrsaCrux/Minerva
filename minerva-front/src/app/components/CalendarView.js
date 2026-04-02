@@ -6,15 +6,17 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import esLocale from '@fullcalendar/core/locales/es';
 import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
+import '../tareas.css';
 
-import { useEffect, useState } from 'react';
-import { Box, Button, Card, CardContent, Modal, Typography } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+import { Box, Button, Modal, Typography } from '@mui/material';
 import FormInasistencia from './FormInasistencia';
 import { createClient } from '../utils/client';
 import { confirmarAsistencia, getEventos } from '../utils/supa';
 import dayjs from 'dayjs';
+import { MdClose, MdLocationOn, MdAccessTime, MdCheckCircle, MdCancel } from 'react-icons/md';
 
-const style = {
+const modalBoxStyle = {
     position: 'absolute',
     top: '50%',
     left: '50%',
@@ -28,9 +30,9 @@ const style = {
 };
 
 export default function CalendarView() {
-    const [popoverOpen, setPopoverOpen] = useState("none")
-    const [hidden, setHidden] = useState(true)
-    const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 })
+    const [popoverOpen, setPopoverOpen] = useState(false)
+    const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 })
+    const popoverRef = useRef(null)
 
     const [eventTitle, setEventTitle] = useState("")
     const [description, setDescription] = useState("")
@@ -38,6 +40,7 @@ export default function CalendarView() {
     const [horaDisplay, setHoraDisplay] = useState("")
     const [eventId, setEventId] = useState()
     const [asistencia, setAsistencia] = useState(0)
+    const [obligatorio, setObligatorio] = useState(false)
 
     const [openM, setOpenM] = useState(false)
     const [events, setEvents] = useState([])
@@ -60,7 +63,6 @@ export default function CalendarView() {
             return;
         }
 
-        // Attendance is embedded in each event by the joined query — no extra requests needed.
         const mappedEvents = eventos.map(ev => {
             const hInicio = dayjs(ev.inicio).format('HH:mm');
             const hFinal = ev.final ? dayjs(ev.final).format('HH:mm') : '';
@@ -74,12 +76,13 @@ export default function CalendarView() {
                 id_evento: ev.id_evento,
                 start: ev.inicio,
                 end: ev.final || ev.inicio,
-                color: ev.obligatorio ? "red" : "blue",
+                color: ev.obligatorio ? "#ef4444" : "#4f46e5",
                 extendedProps: {
                     description: ev.descripcion,
                     lugar: ev.lugar,
                     horaDisplay: horaD,
-                    asistencia: myAsistencia
+                    asistencia: myAsistencia,
+                    obligatorio: ev.obligatorio,
                 }
             };
         });
@@ -90,8 +93,20 @@ export default function CalendarView() {
 
     useEffect(() => {
         fetchEvents()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId])
+
+    // Close popover when clicking outside
+    useEffect(() => {
+        if (!popoverOpen) return;
+        function handleClick(e) {
+            if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+                setPopoverOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, [popoverOpen]);
 
     const handleConfirmar = async () => {
         const userProfileId = userId;
@@ -102,24 +117,27 @@ export default function CalendarView() {
             console.error("Error confirmando", error);
             alert("Error al Confirmar Asistencia");
         } else {
-            alert("Asistencia Confirmada");
-            // Update local state instead of full reload for speed
             setAsistencia(1);
-            fetchEvents(); // Reload quietly to sync calendar colors etc. if needed
+            fetchEvents();
         }
     }
 
-    const handleClose = () => {
-        setOpenM(false)
+    const handleClose = () => setOpenM(false)
+
+    // Clamp popover so it never overflows viewport
+    function clampPosition(x, y, width = 280, height = 320) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const clampedX = Math.min(x, vw - width - 12);
+        const clampedY = Math.min(y, vh - height - 12);
+        return { x: Math.max(clampedX, 8), y: Math.max(clampedY, 8) };
     }
 
     return (
-        <div style={{ height: "100%", position: "relative" }} >
-            <Modal
-                open={openM}
-                onClose={handleClose}
-            >
-                <Box sx={style}>
+        <div style={{ height: "100%", position: "relative" }}>
+            {/* Justification Modal */}
+            <Modal open={openM} onClose={handleClose}>
+                <Box sx={modalBoxStyle}>
                     <FormInasistencia
                         eventId={eventId}
                         handleClose={handleClose}
@@ -131,76 +149,120 @@ export default function CalendarView() {
                 </Box>
             </Modal>
 
-            <div style={{
-                display: popoverOpen, zIndex: 5000, position: "fixed",
-                top: popoverPosition.y, left: popoverPosition.x,
-                width: 250
-            }} hidden={hidden}>
-                <Card elevation={4}>
-                    <CardContent>
-                        <Typography variant="h6" component="div">
-                            {eventTitle}
-                        </Typography>
-                        <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{horaDisplay}</Typography>
-                        <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{lugar}</Typography>
-                        <hr style={{ margin: '8px 0' }} />
-                        <Typography variant="body2" sx={{ mb: 2 }}>
-                            {description || "Sin descripción."}
-                        </Typography>
-
-                        {asistencia !== 2 && (
-                            <Button
-                                onClick={() => {
-                                    setOpenM(true)
-                                    setPopoverOpen("none")
-                                    setHidden(true)
-                                }}
-                                variant="outlined"
-                                color="error"
-                                fullWidth
-                                sx={{ mb: 1, textTransform: 'none' }}
+            {/* ── Modern Event Popover ── */}
+            {popoverOpen && (
+                <div
+                    ref={popoverRef}
+                    className="cal_popover"
+                    style={{ top: popoverPosition.y, left: popoverPosition.x }}
+                >
+                    {/* Header */}
+                    <div className="cal_popover_header">
+                        <div className="cal_popover_header_inner">
+                            <div className="cal_popover_title">{eventTitle}</div>
+                            <button
+                                className="cal_popover_close"
+                                onClick={() => setPopoverOpen(false)}
+                                title="Cerrar"
                             >
-                                Justificar Inasistencia
-                            </Button>
+                                <MdClose size={15} />
+                            </button>
+                        </div>
+                        {/* Badge row */}
+                        <div className="cal_popover_badges">
+                            <span
+                                className="cal_popover_badge"
+                                style={obligatorio
+                                    ? { color: '#dc2626', background: '#fee2e2' }
+                                    : { color: '#4f46e5', background: '#eef2ff' }
+                                }
+                            >
+                                {obligatorio ? 'Obligatorio' : 'Opcional'}
+                            </span>
+                            {asistencia === 1 && (
+                                <span className="cal_popover_badge" style={{ color: '#16a34a', background: '#dcfce7' }}>
+                                    Confirmado
+                                </span>
+                            )}
+                            {asistencia === 2 && (
+                                <span className="cal_popover_badge" style={{ color: '#d97706', background: '#fef3c7' }}>
+                                    Justificado
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="cal_popover_body">
+                        {/* Info grid */}
+                        <div className="cal_popover_info_grid">
+                            <div className="cal_popover_info_cell">
+                                <div className="cal_popover_info_label">
+                                    <MdAccessTime size={12} style={{ marginRight: 4 }} />Horario
+                                </div>
+                                <div className="cal_popover_info_value">{horaDisplay || '—'}</div>
+                            </div>
+                            <div className="cal_popover_info_cell">
+                                <div className="cal_popover_info_label">
+                                    <MdLocationOn size={12} style={{ marginRight: 4 }} />Lugar
+                                </div>
+                                <div className="cal_popover_info_value">{lugar || <span className="td_empty_value">Sin especificar</span>}</div>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        {description && (
+                            <div className="cal_popover_section">
+                                <div className="cal_popover_section_label">Descripción</div>
+                                <div className="cal_popover_description">{description}</div>
+                            </div>
                         )}
 
-                        {asistencia === 0 && (
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                                onClick={handleConfirmar}
-                                sx={{ textTransform: 'none' }}
-                            >
-                                Confirmar Asistencia
-                            </Button>
-                        )}
-
+                        {/* Status confirmation area */}
                         {asistencia === 1 && (
-                            <Typography variant="body2" color="success.main" align="center" fontWeight="bold">
+                            <div className="cal_popover_status cal_popover_status--confirmed">
+                                <MdCheckCircle size={16} />
                                 Asistencia Confirmada
-                            </Typography>
+                            </div>
                         )}
-
                         {asistencia === 2 && (
-                            <Typography variant="body2" color="warning.main" align="center" fontWeight="bold">
+                            <div className="cal_popover_status cal_popover_status--justified">
+                                <MdCancel size={16} />
                                 Justificación Enviada
-                            </Typography>
+                            </div>
                         )}
-                    </CardContent>
-                </Card>
-            </div>
 
-            <div
-                style={{ height: "100%", width: "100%" }}
-                onMouseEnter={() => {
-                    // Hide popover if we mouse over the calendar background
-                    setPopoverOpen("none");
-                    setHidden(true);
-                }}
-            >
-                {loading && <Typography align="center" sx={{ p: 4 }}>Cargando calendario...</Typography>}
+                        {/* Actions */}
+                        <div className="cal_popover_actions">
+                            {asistencia !== 2 && (
+                                <button
+                                    className="cal_popover_btn cal_popover_btn--danger"
+                                    onClick={() => {
+                                        setOpenM(true);
+                                        setPopoverOpen(false);
+                                    }}
+                                >
+                                    Justificar Inasistencia
+                                </button>
+                            )}
+                            {asistencia === 0 && (
+                                <button
+                                    className="cal_popover_btn cal_popover_btn--primary"
+                                    onClick={handleConfirmar}
+                                >
+                                    Confirmar Asistencia
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {/* Calendar */}
+            <div style={{ height: "100%", width: "100%" }}>
+                {loading && (
+                    <Typography align="center" sx={{ p: 4 }}>Cargando calendario...</Typography>
+                )}
                 <FullCalendar
                     themeSystem='bootstrap5'
                     plugins={[dayGridPlugin, listPlugin, bootstrap5Plugin]}
@@ -219,21 +281,22 @@ export default function CalendarView() {
                         meridiem: false,
                         hour12: false
                     }}
-                    eventMouseEnter={(mouseEnterInfo) => {
-                        mouseEnterInfo.jsEvent.stopPropagation(); // Stop calendar background from hiding popover
-                        setEventTitle(mouseEnterInfo.event.title)
-                        setDescription(mouseEnterInfo.event.extendedProps.description)
-                        setLugar(mouseEnterInfo.event.extendedProps.lugar)
-                        setHoraDisplay(mouseEnterInfo.event.extendedProps.horaDisplay)
-                        setEventId(mouseEnterInfo.event.extendedProps.id_evento)
-                        setAsistencia(mouseEnterInfo.event.extendedProps.asistencia)
+                    eventClick={(info) => {
+                        info.jsEvent.stopPropagation();
+                        setEventTitle(info.event.title)
+                        setDescription(info.event.extendedProps.description)
+                        setLugar(info.event.extendedProps.lugar)
+                        setHoraDisplay(info.event.extendedProps.horaDisplay)
+                        setEventId(info.event.extendedProps.id_evento)
+                        setAsistencia(info.event.extendedProps.asistencia)
+                        setObligatorio(info.event.extendedProps.obligatorio)
 
-                        setPopoverPosition({
-                            x: mouseEnterInfo.jsEvent.clientX - 15,
-                            y: mouseEnterInfo.jsEvent.clientY - 15
-                        })
-                        setHidden(false)
-                        setPopoverOpen("block")
+                        const pos = clampPosition(
+                            info.jsEvent.clientX - 15,
+                            info.jsEvent.clientY - 5
+                        );
+                        setPopoverPosition(pos)
+                        setPopoverOpen(true)
                     }}
                 />
             </div>
