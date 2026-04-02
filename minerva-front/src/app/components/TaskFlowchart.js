@@ -144,9 +144,11 @@ function TaskNode({ data }) {
                         onMouseLeave={handleMouseLeave}
                         onClick={(e) => e.stopPropagation()}
                     >
+                        {data.canEdit && (
                         <button className="flowchart_tooltip_edit_icon" onClick={handleEdit} title="Editar tarea">
                             <MdEdit size={14} />
                         </button>
+                        )}
                         <div className="flowchart_tooltip_title">{task.title}</div>
                         {task.description && (
                             <div className="flowchart_tooltip_desc">{task.description}</div>
@@ -403,6 +405,8 @@ export default function TaskFlowchart() {
     async function checkPermissions() {
         const has = await hasPermiso(3)
         setCanCreateGoal(has)
+        // Propagate edit permission to any nodes already rendered
+        setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, canEdit: has } })))
     }
 
     function handleTaskUpdated(updatedTask) {
@@ -419,7 +423,7 @@ export default function TaskFlowchart() {
         setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t))
     }
 
-    // Keep selectedTaskId fresh on every node whenever selectedTask changes
+    // Keep selectedTaskId and canEdit fresh on every node whenever they change
     useEffect(() => {
         const id = selectedTask?.id ?? null
         setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, selectedTaskId: id } })))
@@ -437,6 +441,7 @@ export default function TaskFlowchart() {
                 profiles: profilesData || profiles,
                 onTaskUpdated: handleTaskUpdated,
                 selectedTaskId: selectedId ?? selectedTask?.id ?? null,
+                canEdit: canCreateGoal,
             },
         }
     }
