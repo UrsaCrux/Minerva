@@ -6,6 +6,7 @@ import { createClient } from "../utils/client"
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import '../tareas.css';
+import { resolveCollisions } from './resolveCollisions';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Chip, OutlinedInput, Box, CircularProgress } from "@mui/material"
 
 // Hardcoded colors for teams (since teams table doesn't have color column)
@@ -21,8 +22,8 @@ const TEAM_COLORS = {
 // Priority color bands
 const PRIORITY_COLORS = {
     "1": "#ef4444", // Alta - Red
-    "2": "#f97316", // Media - Orange
-    "3": "#eab308", // Baja - Yellow
+    "2": "#eab308", // Media - Yellow
+    "3": "#2563eb", // Baja - blue
     default: "#cbd5e1" // Sin prioridad - Light gray
 }
 
@@ -68,6 +69,7 @@ function TaskNode({ data }) {
 
     const bgColor = TEAM_COLORS[task.team_id] || TEAM_COLORS.default
 
+
     function handleMouseEnter() {
         clearTimeout(hoverTimeout.current)
         setHovered(true)
@@ -75,6 +77,7 @@ function TaskNode({ data }) {
         const wrapper = nodeRef.current?.closest('.react-flow__node')
         if (wrapper) wrapper.style.zIndex = '9999'
     }
+
 
     function handleMouseLeave() {
         hoverTimeout.current = setTimeout(() => {
@@ -145,9 +148,9 @@ function TaskNode({ data }) {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {data.canEdit && (
-                        <button className="flowchart_tooltip_edit_icon" onClick={handleEdit} title="Editar tarea">
-                            <MdEdit size={14} />
-                        </button>
+                            <button className="flowchart_tooltip_edit_icon" onClick={handleEdit} title="Editar tarea">
+                                <MdEdit size={14} />
+                            </button>
                         )}
                         <div className="flowchart_tooltip_title">{task.title}</div>
                         {task.description && (
@@ -223,15 +226,15 @@ function TaskNode({ data }) {
 
 // ── Status / Priority display helpers ──
 const STATUS_META = {
-    pendiente:   { label: "Pendiente",   color: "#64748b", bg: "#f1f5f9" },
+    pendiente: { label: "Pendiente", color: "#64748b", bg: "#f1f5f9" },
     en_progreso: { label: "En Progreso", color: "#2563eb", bg: "#dbeafe" },
-    completado:  { label: "Completado",  color: "#16a34a", bg: "#dcfce7" },
+    completado: { label: "Completado", color: "#16a34a", bg: "#dcfce7" },
 }
 
 const PRIORITY_META = {
-    "1": { label: "Alta",   color: "#dc2626", bg: "#fee2e2" },
-    "2": { label: "Media",  color: "#d97706", bg: "#fef3c7" },
-    "3": { label: "Baja",   color: "#ca8a04", bg: "#fefce8" },
+    "1": { label: "Alta", color: "#dc2626", bg: "#fee2e2" },
+    "2": { label: "Media", color: "#d97706", bg: "#fef3c7" },
+    "3": { label: "Baja", color: "#ca8a04", bg: "#fefce8" },
 }
 
 // ── Task Details Dialog (formerly only Progresos) ──
@@ -409,6 +412,16 @@ export default function TaskFlowchart() {
         setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, canEdit: has } })))
     }
 
+    const onNodeDragStop = useCallback(() => {
+        setNodes((nds) =>
+            resolveCollisions(nds, {
+                maxIterations: Infinity,
+                overlapThreshold: 0.5,
+                margin: 15,
+            }),
+        );
+    }, [setNodes]);
+
     function handleTaskUpdated(updatedTask) {
         // Update the node data in-place so the flowchart reflects the edit
         setNodes(nds => nds.map(n => {
@@ -462,7 +475,19 @@ export default function TaskFlowchart() {
     }
 
     const onNodesChange = useCallback(
-        (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
+        (changes) => setNodes((nodesSnapshot) => {
+            const updated = applyNodeChanges(changes, nodesSnapshot);
+            // When React Flow finishes measuring new nodes, resolve overlaps
+            const hasDimensionChange = changes.some(c => c.type === 'dimensions');
+            if (hasDimensionChange) {
+                return resolveCollisions(updated, {
+                    maxIterations: Infinity,
+                    overlapThreshold: 0.5,
+                    margin: 15,
+                });
+            }
+            return updated;
+        }),
         [],
     );
     const onEdgesChange = useCallback(
@@ -593,6 +618,7 @@ export default function TaskFlowchart() {
                         nodesConnectable={false}
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
+                        onNodeDragStop={onNodeDragStop}
                         onConnect={onConnect}
                         onNodeClick={onNodeClick}
                         fitView
@@ -630,10 +656,10 @@ export default function TaskFlowchart() {
                         className={`flowchart_float_btn flowchart_float_btn--secondary${!selectedTask ? ' flowchart_float_btn--disabled' : ''}`}
                         onClick={() => selectedTask && setShowCreateModal(true)}
                         disabled={!selectedTask}
-                        title={selectedTask ? 'Añadir Prerrequisito' : 'Selecciona una tarea primero'}
+                        title={selectedTask ? 'Añadir Subtarea' : 'Selecciona una tarea primero'}
                     >
                         <MdAdd size={20} />
-                        <span>Añadir Prerrequisito</span>
+                        <span>Añadir Subtarea</span>
                     </button>
                 </div>
 
