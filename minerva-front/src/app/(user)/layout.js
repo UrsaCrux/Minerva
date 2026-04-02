@@ -2,11 +2,18 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
-import { MdHome, MdPeople, MdAssignment } from "react-icons/md"
+import { MdHome, MdPeople, MdAssignment, MdEvent } from "react-icons/md"
 import UserProfilePopup from "../components/UserProfilePopup"
 import { signOutUser } from "../utils/supaAuth"
 import { hasPermiso } from "../utils/supa"
 import "@/app/dashboard.css"
+
+const PAGE_LABELS = {
+  "/": null,
+  "/tareas": "Tareas",
+  "/usuarios": "Usuarios",
+  "/eventos": "Eventos",
+}
 
 export default function UserLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -21,10 +28,17 @@ export default function UserLayout({ children }) {
   useEffect(() => {
     async function checkPermisos() {
       const canEditUsers = await hasPermiso(1)
+      const canEditEventos = await hasPermiso(2)
       if (canEditUsers) {
         setNavItems(prev => {
           if (prev.some(item => item.href === "/usuarios")) return prev
           return [...prev, { label: "Usuarios", icon: <MdPeople size={18} />, href: "/usuarios" }]
+        })
+      }
+      if (canEditEventos) {
+        setNavItems(prev => {
+          if (prev.some(item => item.href === "/eventos")) return prev
+          return [...prev, { label: "Eventos", icon: <MdEvent size={18} />, href: "/eventos" }]
         })
       }
     }
@@ -56,7 +70,9 @@ export default function UserLayout({ children }) {
           >
             ☰
           </button>
-          <span className="dashboard_header_title">Minerva</span>
+          <span className="dashboard_header_title">
+            Minerva{PAGE_LABELS[pathname] ? <span className="dashboard_header_section"> · {PAGE_LABELS[pathname]}</span> : null}
+          </span>
         </div>
         <div className="dashboard_header_right">
           <UserProfilePopup onSignOut={handleSignOut} />

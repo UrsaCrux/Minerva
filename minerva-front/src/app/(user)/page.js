@@ -1,20 +1,19 @@
 "use client"
 import { useState, useEffect } from "react"
-import FullCalendar from "@fullcalendar/react"
-import dayGridPlugin from "@fullcalendar/daygrid"
-import Perfil from "../utils/perfil"
 import { getMyTasks } from "../utils/supa"
+import { createClient } from "../utils/client"
 import Link from "next/link"
+import CalendarView from "@/app/components/CalendarView"
 
 export default function Home() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const { id_usuario } = Perfil().getToken()
-    if (id_usuario) {
-      loadTasks(id_usuario)
-    }
+    createClient().auth.getSession().then(({ data: { session } }) => {
+      const id_usuario = session?.user?.id
+      if (id_usuario) loadTasks(id_usuario)
+    })
   }, [])
 
   async function loadTasks(userId) {
@@ -36,18 +35,9 @@ export default function Home() {
       <div className="home_grid">
         {/* Calendar Section */}
         <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e0e0e0", padding: 16 }}>
-          <FullCalendar
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            locale="es"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,dayGridWeek",
-            }}
-            height="auto"
-            events={[]}
-          />
+          <div style={{ height: "60vh", minHeight: 400 }}>
+            <CalendarView />
+          </div>
         </div>
 
         {/* My Tasks Section */}
