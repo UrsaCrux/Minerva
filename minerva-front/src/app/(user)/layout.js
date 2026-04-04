@@ -6,6 +6,7 @@ import { MdHome, MdPeople, MdAssignment, MdEvent } from "react-icons/md"
 import UserProfilePopup from "../components/UserProfilePopup"
 import { signOutUser } from "../utils/supaAuth"
 import { hasPermiso } from "../utils/supa"
+import MinervaThemeProvider from "../components/MinervaThemeProvider"
 import "@/app/dashboard.css"
 
 const PAGE_LABELS = {
@@ -59,50 +60,52 @@ export default function UserLayout({ children }) {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <header className="dashboard_header">
-        <div className="dashboard_header_left">
-          <button
-            className="dashboard_hamburger"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Toggle menu"
-          >
-            ☰
-          </button>
-          <span className="dashboard_header_title">
-            Minerva{PAGE_LABELS[pathname] ? <span className="dashboard_header_section"> · {PAGE_LABELS[pathname]}</span> : null}
-          </span>
-        </div>
-        <div className="dashboard_header_right">
-          <UserProfilePopup onSignOut={handleSignOut} />
-        </div>
-      </header>
+    <MinervaThemeProvider>
+      <div>
+        {/* Header */}
+        <header className="dashboard_header">
+          <div className="dashboard_header_left">
+            <button
+              className="dashboard_hamburger"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle menu"
+            >
+              ☰
+            </button>
+            <span className="dashboard_header_title">
+              Minerva{PAGE_LABELS[pathname] ? <span className="dashboard_header_section"> · {PAGE_LABELS[pathname]}</span> : null}
+            </span>
+          </div>
+          <div className="dashboard_header_right">
+            <UserProfilePopup onSignOut={handleSignOut} />
+          </div>
+        </header>
 
-      {/* Sidebar overlay (mobile) */}
-      <div
-        className={`dashboard_sidebar_overlay ${sidebarOpen ? "visible" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-      />
+        {/* Sidebar overlay (mobile) */}
+        <div
+          className={`dashboard_sidebar_overlay ${sidebarOpen ? "visible" : ""}`}
+          onClick={() => setSidebarOpen(false)}
+        />
 
-      {/* Sidebar */}
-      <nav className={`dashboard_sidebar ${sidebarOpen ? "open" : ""}`}>
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`dashboard_nav_item ${pathname === item.href ? "active" : ""}`}
-          >
-            <span>{item.icon}</span>
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+        {/* Sidebar */}
+        <nav className={`dashboard_sidebar ${sidebarOpen ? "open" : ""}`}>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`dashboard_nav_item ${pathname === item.href ? "active" : ""}`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
 
-      {/* Main content */}
-      <main className={`dashboard_main ${sidebarOpen ? "shifted" : ""}`}>
-        {children}
-      </main>
-    </div>
+        {/* Main content */}
+        <main className={`dashboard_main ${sidebarOpen ? "shifted" : ""}`}>
+          {children}
+        </main>
+      </div>
+    </MinervaThemeProvider>
   )
 }

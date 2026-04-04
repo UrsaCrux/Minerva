@@ -31,7 +31,7 @@ const modalBoxStyle = {
 
 export default function CalendarView() {
     const [popoverOpen, setPopoverOpen] = useState(false)
-    const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 })
+    const [popoverPosition, setPopoverPosition] = useState({ x: 0, top: 0, bottom: 'auto' })
     const popoverRef = useRef(null)
 
     const [eventTitle, setEventTitle] = useState("")
@@ -124,13 +124,30 @@ export default function CalendarView() {
 
     const handleClose = () => setOpenM(false)
 
-    // Clamp popover so it never overflows viewport
-    function clampPosition(x, y, width = 280, height = 320) {
+    // Calculate popover position relative to event
+    function calculatePosition(rect) {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        const clampedX = Math.min(x, vw - width - 12);
-        const clampedY = Math.min(y, vh - height - 12);
-        return { x: Math.max(clampedX, 8), y: Math.max(clampedY, 8) };
+        const width = 290;
+        const estimatedHeight = 320;
+        
+        let x = rect.left;
+        let top = rect.bottom + 8;
+        let bottom = 'auto';
+
+        if (x + width > vw - 12) {
+            x = vw - width - 12;
+        }
+        x = Math.max(x, 12);
+
+        if (rect.bottom + estimatedHeight > vh - 12) {
+            if (rect.top > vh - rect.bottom) {
+                top = 'auto';
+                bottom = vh - rect.top + 8;
+            }
+        }
+
+        return { x, top, bottom };
     }
 
     return (
@@ -154,7 +171,7 @@ export default function CalendarView() {
                 <div
                     ref={popoverRef}
                     className="cal_popover"
-                    style={{ top: popoverPosition.y, left: popoverPosition.x }}
+                    style={{ top: popoverPosition.top, bottom: popoverPosition.bottom, left: popoverPosition.x }}
                 >
                     {/* Header */}
                     <div className="cal_popover_header">
@@ -291,10 +308,8 @@ export default function CalendarView() {
                         setAsistencia(info.event.extendedProps.asistencia)
                         setObligatorio(info.event.extendedProps.obligatorio)
 
-                        const pos = clampPosition(
-                            info.jsEvent.clientX - 15,
-                            info.jsEvent.clientY - 5
-                        );
+                        const rect = info.el.getBoundingClientRect();
+                        const pos = calculatePosition(rect);
                         setPopoverPosition(pos)
                         setPopoverOpen(true)
                     }}

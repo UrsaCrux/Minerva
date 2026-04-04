@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD — Galactic Oversight Design
+   ═══════════════════════════════════════════════════════════ */
+
 /* ── Header ── */
 .dashboard_header {
     display: flex;
@@ -5,13 +9,14 @@
     justify-content: space-between;
     height: 56px;
     padding: 0 20px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
+    background-color: var(--surface-container-low);
+    box-shadow: 0 1px 0 rgba(69, 69, 100, 0.2), 0 4px 24px rgba(0, 0, 0, 0.3);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
+    backdrop-filter: blur(12px);
 }
 
 .dashboard_header_left {
@@ -21,9 +26,10 @@
 }
 
 .dashboard_header_title {
+    font-family: var(--font-display);
     font-size: 1.2rem;
-    font-weight: 600;
-    color: #1a1a1a;
+    font-weight: 700;
+    color: var(--on-surface);
     letter-spacing: 0.03em;
     display: flex;
     align-items: baseline;
@@ -31,8 +37,9 @@
 }
 
 .dashboard_header_section {
+    font-family: var(--font-display);
     font-weight: 400;
-    color: #888;
+    color: var(--on-surface-variant);
     font-size: 1rem;
     letter-spacing: 0.02em;
 }
@@ -46,14 +53,15 @@
     border: none;
     background: none;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1.2rem;
-    color: #1a1a1a;
-    transition: background-color 0.15s;
+    color: var(--on-surface-variant);
+    transition: background-color 0.15s, color 0.15s;
 }
 
 .dashboard_hamburger:hover {
-    background-color: #f0f0f0;
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
 }
 
 .dashboard_header_right {
@@ -64,7 +72,7 @@
 
 .dashboard_username {
     font-size: 0.9rem;
-    color: #555;
+    color: var(--on-surface-variant);
     font-weight: 500;
 }
 
@@ -77,13 +85,15 @@
     border: none;
     background: none;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1.2rem;
     transition: background-color 0.15s;
+    color: var(--on-surface-variant);
 }
 
 .dashboard_signout:hover {
-    background-color: #f0f0f0;
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
 }
 
 .dashboard_profile_section {
@@ -97,11 +107,11 @@
     overflow: hidden;
     position: relative;
     cursor: pointer;
-    background-color: #f0f0f0;
+    background-color: var(--surface-container-high);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #e0e0e0;
+    border: var(--ghost-border);
     transition: opacity 0.2s;
 }
 
@@ -127,7 +137,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(13, 13, 28, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,8 +146,8 @@
 .profile_avatar_spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid #ccc;
-    border-top-color: #333;
+    border: 2px solid rgba(159, 163, 255, 0.3);
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -155,8 +165,8 @@
     left: 0;
     bottom: 0;
     width: 220px;
-    background-color: #fafafa;
-    border-right: 1px solid #e0e0e0;
+    background-color: var(--surface-container-low);
+    box-shadow: 1px 0 0 rgba(69, 69, 100, 0.15);
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 90;
@@ -175,7 +185,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
     z-index: 80;
 }
 
@@ -189,22 +200,27 @@
     gap: 10px;
     padding: 10px 20px;
     font-size: 0.9rem;
-    color: #333;
+    font-family: var(--font-body);
+    color: var(--on-surface-variant);
     text-decoration: none;
-    transition: background-color 0.15s;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     cursor: pointer;
     border: none;
     background: none;
     width: 100%;
     text-align: left;
+    border-left: 3px solid transparent;
 }
 
 .dashboard_nav_item:hover {
-    background-color: #eeeeee;
+    background-color: var(--surface-container);
+    color: var(--on-surface);
 }
 
 .dashboard_nav_item.active {
-    background-color: #e8e8e8;
+    background-color: var(--surface-container-high);
+    color: var(--primary);
+    border-left-color: var(--primary);
     font-weight: 600;
 }
 
@@ -216,6 +232,7 @@
     padding: 24px;
     box-sizing: border-box;
     transition: margin-left 0.25s ease;
+    background: var(--surface);
 }
 
 /* Desktop: push content when sidebar is open */
@@ -243,8 +260,9 @@
 /* ── Home Page Grid ── */
 .home_grid {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 25fr 20fr 55fr;
     gap: 20px;
+    height: 100%;
 }
 
 @media (max-width: 1024px) {
@@ -253,19 +271,67 @@
     }
 }
 
-.my_tasks_section {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+/* Card base with top-glow */
+.home_card {
+    background-color: var(--surface-container);
+    border-radius: 12px;
+    border: var(--ghost-border);
     padding: 16px;
-    max-height: 500px;
-    overflow-y: auto;
+    position: relative;
+    overflow: hidden;
 }
 
-.tasks_list {
+.home_card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--primary), transparent);
+    border-radius: 12px 12px 0 0;
+}
+
+.db_col_assigned,
+.db_col_anuncios,
+.db_col_eventos {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    height: 100%;
+}
+
+.db_card_title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.db_tasks_list,
+.db_scroll_list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 4px;
+}
+
+/* Scrollbar styling for these internal scrolling lists */
+.db_scroll_list::-webkit-scrollbar,
+.db_tasks_list::-webkit-scrollbar {
+    width: 6px;
+}
+.db_scroll_list::-webkit-scrollbar-thumb,
+.db_tasks_list::-webkit-scrollbar-thumb {
+    background-color: var(--surface-container-highest);
+    border-radius: 4px;
+}
+.db_scroll_list::-webkit-scrollbar-track,
+.db_tasks_list::-webkit-scrollbar-track {
+    background-color: transparent;
 }
 
 .task_card_link {
@@ -276,16 +342,16 @@
 
 .task_mini_card {
     padding: 12px;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    background-color: #fafafa;
-    transition: transform 0.1s, box-shadow 0.1s;
+    border: var(--ghost-border);
+    border-radius: 8px;
+    background-color: var(--surface-container-low);
+    transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s;
 }
 
 .task_mini_card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    border-color: #ddd;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 8px var(--surface-tint);
+    background-color: var(--surface-container-high);
 }
 
 .task_mini_header {
@@ -299,37 +365,101 @@
 .task_mini_title {
     font-size: 0.95rem;
     font-weight: 500;
-    color: #333;
+    color: var(--on-surface);
     line-height: 1.3;
 }
 
 .task_status_badge {
     font-size: 0.7rem;
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 4px;
-    background: #e0e0e0;
-    color: #555;
+    background: var(--surface-container-highest);
+    color: var(--on-surface-variant);
     white-space: nowrap;
     text-transform: capitalize;
+    font-weight: 600;
 }
 
 .task_status_badge.completado,
 .task_status_badge.completed {
-    background-color: #e6fffa;
-    color: #047857;
-    border: 1px solid #b7f0e5;
+    background-color: rgba(0, 219, 231, 0.12);
+    color: var(--secondary);
+    border: 1px solid rgba(0, 219, 231, 0.25);
 }
 
 .task_status_badge.en_progreso,
 .task_status_badge.in_progress {
-    background-color: #ebf8ff;
-    color: #0369a1;
-    border: 1px solid #bee3f8;
+    background-color: rgba(159, 163, 255, 0.12);
+    color: var(--primary);
+    border: 1px solid rgba(159, 163, 255, 0.25);
 }
 
 .task_mini_date {
     font-size: 0.8rem;
-    color: #777;
+    color: var(--on-surface-variant);
+}
+
+/* ── Anuncios y Eventos ── */
+.db_anuncio_item,
+.db_evento_item {
+    padding: 12px;
+    border: var(--ghost-border);
+    border-radius: 8px;
+    background-color: var(--surface-container-low);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.db_anuncio_title,
+.db_evento_title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--on-surface);
+    margin: 0;
+}
+
+.db_anuncio_meta,
+.db_evento_date {
+    font-size: 0.8rem;
+    color: var(--on-surface-variant);
+    display: flex;
+    gap: 6px;
+}
+
+.db_anuncio_cuerpo {
+    font-size: 0.85rem;
+    color: var(--on-surface-variant);
+    margin: 4px 0 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.db_anuncio_img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.status_confirmed { color: var(--secondary); }
+.status_absent { color: var(--error); }
+.status_pending { color: var(--primary); }
+.status_none { color: var(--on-surface-variant); }
+
+.task_status_badge.en_progreso,
+.task_status_badge.in_progress {
+    background-color: rgba(159, 163, 255, 0.12);
+    color: var(--primary);
+    border: 1px solid rgba(159, 163, 255, 0.25);
+}
+
+.task_mini_date {
+    font-size: 0.8rem;
+    color: var(--on-surface-variant);
 }
 
 /* ── User Profile Popup ── */
@@ -343,28 +473,29 @@
     align-items: center;
     gap: 8px;
     padding: 5px 10px 5px 5px;
-    border: 1px solid #e0e0e0;
+    border: var(--ghost-border);
     border-radius: 24px;
-    background: #fff;
+    background: var(--surface-container);
     cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #333;
+    color: var(--on-surface);
+    font-family: var(--font-body);
 }
 
 .profile_popup_trigger:hover,
 .profile_popup_trigger.active {
-    background-color: #f5f5f5;
-    border-color: #c8c8c8;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background-color: var(--surface-container-high);
+    border-color: rgba(159, 163, 255, 0.25);
+    box-shadow: 0 0 0 2px rgba(159, 163, 255, 0.1);
 }
 
 .profile_popup_trigger_avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #f0f0f0;
+    background: var(--surface-container-high);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -381,20 +512,22 @@
 
 .profile_popup_trigger_chevron {
     font-size: 0.6rem;
-    color: #999;
+    color: var(--on-surface-variant);
     margin-left: 2px;
 }
 
-/* Floating panel */
+/* Floating panel — Glassmorphism */
 .profile_popup_panel {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     width: 290px;
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
+    background: rgba(35, 35, 64, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--ghost-border);
     border-radius: 12px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--ambient-shadow);
     z-index: 200;
     padding: 16px;
     animation: popup_fadein 0.15s ease;
@@ -421,11 +554,16 @@
     position: relative;
     cursor: pointer;
     flex-shrink: 0;
-    background: #f0f0f0;
+    background: var(--surface-container-high);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #e0e0e0;
+    border: 2px solid rgba(159, 163, 255, 0.2);
+    transition: border-color 0.18s;
+}
+
+.profile_popup_avatar_wrap:hover {
+    border-color: rgba(159, 163, 255, 0.5);
 }
 
 .profile_popup_avatar_placeholder {
@@ -443,7 +581,7 @@
 .profile_popup_avatar_overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.38);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -455,8 +593,8 @@
 .profile_popup_spinner {
     width: 18px;
     height: 18px;
-    border: 2px solid rgba(255,255,255,0.5);
-    border-top-color: #fff;
+    border: 2px solid rgba(159, 163, 255, 0.3);
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
 }
@@ -472,9 +610,10 @@
 }
 
 .profile_popup_fullname {
+    font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--on-surface);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -485,7 +624,7 @@
     align-items: center;
     gap: 5px;
     font-size: 0.78rem;
-    color: #666;
+    color: var(--on-surface-variant);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -500,7 +639,7 @@
 /* Divider */
 .profile_popup_divider {
     height: 1px;
-    background: #eeeeee;
+    background: linear-gradient(90deg, transparent, rgba(69, 69, 100, 0.3), transparent);
     margin: 12px 0;
 }
 
@@ -515,20 +654,22 @@
     border: none;
     cursor: pointer;
     font-size: 0.85rem;
-    color: #444;
+    font-family: var(--font-body);
+    color: var(--on-surface-variant);
     border-radius: 6px;
-    transition: background-color 0.12s;
+    transition: background-color 0.12s, color 0.12s;
     text-align: left;
 }
 
 .profile_popup_section_toggle:hover {
-    background-color: #f5f5f5;
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
 }
 
 .profile_popup_toggle_chevron {
     margin-left: auto;
     font-size: 0.6rem;
-    color: #999;
+    color: var(--on-surface-variant);
 }
 
 /* Password form */
@@ -549,19 +690,21 @@
 .profile_popup_input {
     width: 100%;
     padding: 8px 36px 8px 10px;
-    border: 1px solid #d8d8d8;
+    border: 1px solid rgba(69, 69, 100, 0.35);
     border-radius: 7px;
     font-size: 0.83rem;
-    color: #333;
-    background: #fafafa;
+    font-family: var(--font-body);
+    color: var(--on-surface);
+    background: var(--surface-container-lowest);
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     box-sizing: border-box;
 }
 
 .profile_popup_input:focus {
-    border-color: #888;
-    background: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary), 0 0 6px rgba(159, 163, 255, 0.3);
+    background: var(--surface-container-lowest);
 }
 
 .profile_popup_pw_eye {
@@ -570,10 +713,15 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #888;
+    color: var(--on-surface-variant);
     padding: 2px;
     display: flex;
     align-items: center;
+    transition: color 0.12s;
+}
+
+.profile_popup_pw_eye:hover {
+    color: var(--on-surface);
 }
 
 .profile_popup_pw_msg {
@@ -586,33 +734,38 @@
 }
 
 .profile_popup_pw_msg.success {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: rgba(0, 219, 231, 0.1);
+    color: var(--secondary);
+    border: 1px solid rgba(0, 219, 231, 0.2);
 }
 
 .profile_popup_pw_msg.error {
-    background: #fdecea;
-    color: #b71c1c;
+    background: var(--error-container);
+    color: var(--error);
+    border: 1px solid rgba(253, 111, 133, 0.25);
 }
 
 .profile_popup_pw_submit {
     padding: 8px;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--gradient-primary);
+    color: var(--on-primary);
     border: none;
-    border-radius: 7px;
+    border-radius: 0.75rem;
     font-size: 0.83rem;
-    font-weight: 500;
+    font-family: var(--font-body);
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: opacity 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 14px rgba(159, 163, 255, 0.2);
 }
 
 .profile_popup_pw_submit:hover:not(:disabled) {
-    background: #333;
+    opacity: 0.9;
+    box-shadow: 0 6px 20px rgba(159, 163, 255, 0.3);
 }
 
 .profile_popup_pw_submit:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
@@ -627,12 +780,13 @@
     border: none;
     cursor: pointer;
     font-size: 0.85rem;
-    color: #c0392b;
+    font-family: var(--font-body);
+    color: var(--error);
     border-radius: 6px;
     transition: background-color 0.12s;
     font-weight: 500;
 }
 
 .profile_popup_signout:hover {
-    background-color: #fdf0ef;
-}
+    background-color: var(--error-container);
+}
