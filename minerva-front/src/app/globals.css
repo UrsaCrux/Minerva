@@ -1,19 +1,104 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════
+   GALACTIC OVERSIGHT — Design Token System
+   "The Celestial Navigator"
+   ═══════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Surface Hierarchy ── */
+  --surface:                  #0d0d1c;  /* Base deep-space background */
+  --surface-container-lowest: #000000;  /* Recessed insets */
+  --surface-container-low:    #111124;  /* Large layout blocks */
+  --surface-container:        #17172d;  /* Primary card level */
+  --surface-container-high:   #1d1d36;  /* Hovered / active states */
+  --surface-container-highest:#232340;  /* Drilled-down content */
+
+  /* ── Primary — Indigo/Violet ── */
+  --primary:           #9fa3ff;
+  --primary-container: #3730a3;
+  --on-primary:        #1a1a3a;
+
+  /* ── Secondary — Cyan / Ion Engine ── */
+  --secondary:           #00dbe7;
+  --secondary-container: rgba(0, 219, 231, 0.15);
+  --on-secondary:        #001f2b;
+
+  /* ── Tertiary — Violet Utility ── */
+  --tertiary: #ebb2ff;
+
+  /* ── Semantic ── */
+  --error:           #fd6f85;
+  --error-container: rgba(253, 111, 133, 0.12);
+
+  /* ── On-Surface Text ── */
+  --on-surface:         #e4e3ff;
+  --on-surface-variant: #a9a8cc;
+
+  /* ── Borders & Tints ── */
+  --outline-variant: #454564;
+  --surface-tint:    rgba(159, 163, 255, 0.05);
+
+  /* ── Ghost Border Shorthand ── */
+  --ghost-border: 1px solid rgba(69, 69, 100, 0.18);
+
+  /* ── Ambient Shadow ── */
+  --ambient-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 10px rgba(159, 163, 255, 0.05);
+
+  /* ── Gradient — Ion Engine CTA ── */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+
+  /* ── Fonts (injected by layout.js) ── */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body:    'Inter', sans-serif;
+
+  /* ── Legacy Tailwind compat ── */
+  --background: var(--surface);
+  --foreground: var(--on-surface);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+}
+
+/* ── Base Reset & Body ── */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Headings use Display font ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* ── Dark Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-container-low);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(69, 69, 100, 0.5);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(159, 163, 255, 0.3);
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(159, 163, 255, 0.25);
+  color: var(--on-surface);
 }

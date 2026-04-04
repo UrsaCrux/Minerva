@@ -2,12 +2,12 @@
 import "@/app/login.css"
 import { Box, Button, CircularProgress, Modal, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { green } from '@mui/material/colors';
 import { useRouter } from 'next/navigation'
 import { signInUser, changePassword } from "../utils/supaAuth";
 import { getProfileById, updateProfile } from "../utils/supa";
 import { createClient } from "../utils/client";
 import Perfil from "../utils/perfil";
+import MinervaThemeProvider from "../components/MinervaThemeProvider";
 
 const supabase = createClient();
 
@@ -21,6 +21,7 @@ const modalStyle = {
     bgcolor: 'background.paper',
     borderRadius: '12px',
     boxShadow: 24,
+    border: '1px solid rgba(69, 69, 100, 0.18)',
     p: 4,
 };
 
@@ -110,93 +111,96 @@ export default function Login() {
     }
 
     return (
-        <div className="login_container">
-            {/* First-login setup modal */}
-            <Modal
-                open={showSetup}
-                disableEscapeKeyDown
-                aria-labelledby="setup-modal-title"
-            >
-                <Box sx={modalStyle}>
-                    <Typography id="setup-modal-title" variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-                        Configuración inicial
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 3, color: "#666" }}>
-                        Es tu primer inicio de sesión. Crea una nueva contraseña para continuar.
-                    </Typography>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                        <TextField
-                            label="Nueva contraseña"
-                            type="password"
-                            variant="standard"
-                            size="small"
-                            autoComplete="new-password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            helperText="Mínimo 8 caracteres"
-                        />
-                        <TextField
-                            label="Confirmar contraseña"
-                            type="password"
-                            variant="standard"
-                            size="small"
-                            autoComplete="new-password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                        {setupError && (
-                            <Typography variant="body2" sx={{ color: "error.main" }}>
-                                {setupError}
-                            </Typography>
-                        )}
-                        <Button
-                            variant="outlined"
-                            disabled={setupLoading}
-                            onClick={handleSetupSubmit}
-                        >
-                            {setupLoading ? <CircularProgress size={20} /> : "Guardar"}
-                        </Button>
-                    </div>
-                </Box>
-            </Modal>
+        <MinervaThemeProvider>
+            <div className="login_container">
+                {/* First-login setup modal */}
+                <Modal
+                    open={showSetup}
+                    disableEscapeKeyDown
+                    aria-labelledby="setup-modal-title"
+                >
+                    <Box sx={modalStyle}>
+                        <Typography id="setup-modal-title" variant="h6" sx={{ mb: 1, fontWeight: 600, fontFamily: 'Space Grotesk, sans-serif' }}>
+                            Configuración inicial
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 3 }}>
+                            Es tu primer inicio de sesión. Crea una nueva contraseña para continuar.
+                        </Typography>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                            <TextField
+                                label="Nueva contraseña"
+                                type="password"
+                                variant="standard"
+                                size="small"
+                                autoComplete="new-password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                helperText="Mínimo 8 caracteres"
+                            />
+                            <TextField
+                                label="Confirmar contraseña"
+                                type="password"
+                                variant="standard"
+                                size="small"
+                                autoComplete="new-password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                            {setupError && (
+                                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                                    {setupError}
+                                </Typography>
+                            )}
+                            <Button
+                                variant="contained"
+                                disabled={setupLoading}
+                                onClick={handleSetupSubmit}
+                            >
+                                {setupLoading ? <CircularProgress size={20} /> : "Guardar"}
+                            </Button>
+                        </div>
+                    </Box>
+                </Modal>
 
-            <h1 className="login_title">Minerva</h1>
-            <div className="login_form_container">
-                <TextField
-                    id="standard-user-input"
-                    label="Username"
-                    type="text"
-                    variant="standard"
-                    size="small"
-                    value={username}
-                    onChange={(e) => { setUsername(e.target.value) }}
-                />
-                <TextField
-                    id="standard-password-input"
-                    label="Password"
-                    type="password"
-                    variant="standard"
-                    autoComplete="off"
-                    size="small"
-                    value={passwordUsuario}
-                    onChange={(e) => { setPasswordUsuario(e.target.value) }}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !loading) handleLogin() }}
-                />
-                <Button variant="outlined" disabled={loading} onClick={handleLogin}>Ingresar</Button>
-                {loading && (
-                    <CircularProgress
-                        size={40}
-                        sx={{
-                            color: green[500],
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            marginTop: '-20px',
-                            marginLeft: '-20px',
-                        }}
+                <h1 className="login_title">Minerva</h1>
+                <div className="login_form_container">
+                    <TextField
+                        id="standard-user-input"
+                        label="Username"
+                        type="text"
+                        variant="standard"
+                        size="small"
+                        value={username}
+                        onChange={(e) => { setUsername(e.target.value) }}
                     />
-                )}
+                    <TextField
+                        id="standard-password-input"
+                        label="Password"
+                        type="password"
+                        variant="standard"
+                        autoComplete="off"
+                        size="small"
+                        value={passwordUsuario}
+                        onChange={(e) => { setPasswordUsuario(e.target.value) }}
+                        onKeyDown={(e) => { if (e.key === "Enter" && !loading) handleLogin() }}
+                    />
+                    <Button variant="contained" disabled={loading} onClick={handleLogin}>
+                        Ingresar
+                    </Button>
+                    {loading && (
+                        <CircularProgress
+                            size={40}
+                            sx={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                marginTop: '-20px',
+                                marginLeft: '-20px',
+                            }}
+                        />
+                    )}
+                </div>
             </div>
-        </div >
+        </MinervaThemeProvider>
     );
 }
