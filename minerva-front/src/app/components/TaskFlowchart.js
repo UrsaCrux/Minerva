@@ -8,15 +8,16 @@ import '@xyflow/react/dist/style.css';
 import '../tareas.css';
 import { resolveCollisions } from './resolveCollisions';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Chip, OutlinedInput, Box, CircularProgress } from "@mui/material"
+import TaskDetailsDialog from "./TaskDetailsDialog"
 
-// Hardcoded colors for teams (since teams table doesn't have color column)
+// Hardcoded colors for teams mapped to vibrant Celestial Navigator Theme colors
 const TEAM_COLORS = {
-    1: "#f87171", // Red
-    2: "#60a5fa", // Blue
-    3: "#facc15", // Yellow
-    4: "#4ade80", // Green
-    5: "#c084fc", // Purple
-    default: "#94a3b8" // Gray
+    1: "#9fa2ffc9", // Primary (Soft Blue/Purple)
+    2: "#00dbe7ac", // Secondary (Cyan)
+    3: "#eab2ffb5", // Tertiary (Light Purple)
+    4: "#fd6f84d2", // Error (Salmon Red)
+    5: "#a9a8cce2", // On-surface variant (Lavender grey)
+    default: "#454564" // Outline variant (Muted default)
 }
 
 // Priority color bands
@@ -88,14 +89,10 @@ function TaskNode({ data }) {
         }, 200)
     }
 
-    async function handleViewDetails(e) {
+    function handleViewDetails(e) {
         e.stopPropagation()
         setHovered(false)
         setShowProgresos(true)
-        setLoadingProgresos(true)
-        const { progresos: data } = await getTaskProgresos(task.id)
-        setProgresos(data)
-        setLoadingProgresos(false)
     }
 
     function handleEdit(e) {
@@ -171,7 +168,7 @@ function TaskNode({ data }) {
                                 </span>
                             )}
                             {data.teams?.find(t => t.id === task.team_id)?.name && (
-                                <span className="flowchart_tooltip_badge" style={{ color: '#7c3aed', background: '#ede9fe' }}>
+                                <span className="flowchart_tooltip_badge" style={{ color: '#ebb2ff', background: 'rgba(235,178,255,0.12)' }}>
                                     {data.teams.find(t => t.id === task.team_id).name}
                                 </span>
                             )}
@@ -183,7 +180,7 @@ function TaskNode({ data }) {
                             <span className="flowchart_tooltip_info_value">
                                 {task.assigned_to_profile
                                     ? (task.assigned_to_profile.full_name || task.assigned_to_profile.username)
-                                    : <em style={{ color: '#bbb' }}>Sin asignar</em>
+                                    : <em style={{ color: 'var(--on-surface-variant)' }}>Sin asignar</em>
                                 }
                             </span>
                         </div>
@@ -198,10 +195,8 @@ function TaskNode({ data }) {
 
             {/* Task Details Dialog */}
             {showProgresos && (
-                <ProgresosDialog
+                <TaskDetailsDialog
                     task={task}
-                    progresos={progresos}
-                    loading={loadingProgresos}
                     onClose={() => setShowProgresos(false)}
                     teams={data.teams || []}
                 />
@@ -226,160 +221,15 @@ function TaskNode({ data }) {
 
 // ── Status / Priority display helpers ──
 const STATUS_META = {
-    pendiente: { label: "Pendiente", color: "#64748b", bg: "#f1f5f9" },
-    en_progreso: { label: "En Progreso", color: "#2563eb", bg: "#dbeafe" },
-    completado: { label: "Completado", color: "#16a34a", bg: "#dcfce7" },
+    pendiente: { label: "Pendiente", color: "#a9a8cc", bg: "rgba(169,168,204,0.12)" },
+    en_progreso: { label: "En Progreso", color: "#9fa3ff", bg: "rgba(159,163,255,0.15)" },
+    completado: { label: "Completado", color: "#00dbe7", bg: "rgba(0,219,231,0.12)" },
 }
 
 const PRIORITY_META = {
-    "1": { label: "Alta", color: "#dc2626", bg: "#fee2e2" },
-    "2": { label: "Media", color: "#d97706", bg: "#fef3c7" },
-    "3": { label: "Baja", color: "#ca8a04", bg: "#fefce8" },
-}
-
-// ── Task Details Dialog (formerly only Progresos) ──
-function ProgresosDialog({ task, progresos, loading, onClose, teams }) {
-    const teamName = teams?.find(t => t.id === task.team_id)?.name
-    const statusMeta = STATUS_META[task.status] || { label: task.status || "—", color: "#64748b", bg: "#f1f5f9" }
-    const priorityMeta = task.priority ? (PRIORITY_META[String(task.priority)] || null) : null
-    const participants = getTaskAvatars(task)
-
-    return (
-        <Dialog open={true} onClose={onClose} fullWidth maxWidth="sm"
-            PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}
-        >
-            {/* ── Header ── */}
-            <div className="td_header">
-                <div className="td_header_inner">
-                    <div className="td_title">{task.title}</div>
-                    <button className="td_close_btn" onClick={onClose} title="Cerrar">
-                        <MdClose size={18} />
-                    </button>
-                </div>
-            </div>
-
-            <DialogContent style={{ padding: "20px 24px 8px", display: "flex", flexDirection: "column", gap: 20 }}>
-
-                {/* ── Badge Row ── */}
-                <div className="td_badge_row">
-                    <span className="td_badge" style={{ color: statusMeta.color, background: statusMeta.bg }}>
-                        {statusMeta.label}
-                    </span>
-                    {priorityMeta && (
-                        <span className="td_badge" style={{ color: priorityMeta.color, background: priorityMeta.bg }}>
-                            {priorityMeta.label} prioridad
-                        </span>
-                    )}
-                    {teamName && (
-                        <span className="td_badge" style={{ color: "#7c3aed", background: "#ede9fe" }}>
-                            {teamName}
-                        </span>
-                    )}
-                </div>
-
-                {/* ── Description ── */}
-                {task.description && (
-                    <div className="td_section">
-                        <div className="td_section_label">Descripción</div>
-                        <div className="td_description">{task.description}</div>
-                    </div>
-                )}
-
-                {/* ── Info Grid ── */}
-                <div className="td_info_grid">
-                    {/* Assigned to */}
-                    <div className="td_info_cell">
-                        <div className="td_info_label">Asignado a</div>
-                        <div className="td_info_value td_person_row">
-                            {task.assigned_to_profile ? (
-                                <>
-                                    <div className="td_mini_avatar">
-                                        {task.assigned_to_profile.avatar_url
-                                            ? <img src={task.assigned_to_profile.avatar_url} alt="" />
-                                            : getInitials(task.assigned_to_profile.full_name || task.assigned_to_profile.username)
-                                        }
-                                    </div>
-                                    <span>{task.assigned_to_profile.full_name || task.assigned_to_profile.username}</span>
-                                </>
-                            ) : (
-                                <span className="td_empty_value">Sin asignar</span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Due date */}
-                    <div className="td_info_cell">
-                        <div className="td_info_label">Fecha límite</div>
-                        <div className="td_info_value">
-                            {task.due_date
-                                ? new Date(task.due_date + "T00:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
-                                : <span className="td_empty_value">Sin fecha</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── Participants ── */}
-                {participants.length > 0 && (
-                    <div className="td_section">
-                        <div className="td_section_label">Participantes ({participants.length})</div>
-                        <div className="td_participants_row">
-                            {participants.map(p => (
-                                <div key={p.id} className="td_participant" title={p.full_name || p.username || "Usuario"}>
-                                    <div className="td_mini_avatar">
-                                        {p.avatar_url
-                                            ? <img src={p.avatar_url} alt="" />
-                                            : getInitials(p.full_name || p.username)
-                                        }
-                                    </div>
-                                    <span>{p.full_name || p.username || "Usuario"}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* ── Divider ── */}
-                <div className="td_divider" />
-
-                {/* ── Progresos Section ── */}
-                <div className="td_progresos_section">
-                    <div className="td_section_label" style={{ marginBottom: 12 }}>Historial de Progreso</div>
-                    {loading ? (
-                        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
-                            <CircularProgress size={28} />
-                        </div>
-                    ) : progresos.length === 0 ? (
-                        <div className="progreso_empty">No hay progresos registrados.</div>
-                    ) : (
-                        <div className="progreso_list">
-                            {progresos.map(p => (
-                                <div key={p.id} className="progreso_card">
-                                    <div className="progreso_card_title">{p.titulo || "Sin título"}</div>
-                                    {p.descripcion && (
-                                        <div className="progreso_card_desc">{p.descripcion}</div>
-                                    )}
-                                    <div className="progreso_card_meta">
-                                        <div className="progreso_card_author">
-                                            {p.profiles?.avatar_url && (
-                                                <img src={p.profiles.avatar_url} alt="" />
-                                            )}
-                                            <span>{p.profiles?.full_name || p.profiles?.username || "Usuario"}</span>
-                                        </div>
-                                        <span>{new Date(p.created_at).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </DialogContent>
-
-            <DialogActions style={{ padding: "12px 24px 20px" }}>
-                <Button onClick={onClose} variant="outlined" color="inherit">Cerrar</Button>
-            </DialogActions>
-        </Dialog>
-    )
+    "1": { label: "Alta", color: "#fd6f85", bg: "rgba(253,111,133,0.15)" },
+    "2": { label: "Media", color: "#ebb2ff", bg: "rgba(235,178,255,0.12)" },
+    "3": { label: "Baja", color: "#9fa3ff", bg: "rgba(159,163,255,0.10)" },
 }
 
 // Define nodeTypes outside the component to prevent React re-renders
@@ -609,7 +459,7 @@ export default function TaskFlowchart() {
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             {/* Graph Container — full height, floating controls inside */}
-            <div style={{ flex: 1, overflow: "auto", background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0", minHeight: 400, position: "relative" }}>
+            <div style={{ flex: 1, overflow: "auto", background: "var(--surface-container-low)", borderRadius: 8, border: "1px solid rgba(69,69,100,0.18)", minHeight: 400, position: "relative" }}>
                 <div style={{ width: '100%', height: '100%' }}>
                     <ReactFlow
                         nodes={nodes}

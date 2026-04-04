@@ -601,4 +601,19 @@ export async function enviarJustificacion(id_evento, id_usuario, motivo, archivo
     return { error }
 }
 
+/**
+ * Fetches all announcements.
+ */
+export async function getAnuncios() {
+    const { data, error } = await supaClient
+        .from('anuncios')
+        .select(`
+            id, fecha, titulo, cuerpo, imagen_url, created_at,
+            publicado_por ( id, full_name, avatar_url )
+        `)
+        .order('fecha', { ascending: false })
+
+    return { anuncios: data ?? [], error }
+}
+
 export { supaClient }

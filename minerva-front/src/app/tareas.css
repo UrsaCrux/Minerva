@@ -1,8 +1,23 @@
+/* ═══════════════════════════════════════════════════════════
+   TAREAS — Galactic Oversight Design
+   ═══════════════════════════════════════════════════════════ */
+
 .task_tree_container {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: var(--surface-container);
+    border: var(--ghost-border);
+    border-radius: 10px;
     overflow: hidden;
+    position: relative;
+}
+
+.task_tree_container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--primary), transparent);
 }
 
 .task_node_header {
@@ -10,14 +25,14 @@
     align-items: center;
     gap: 6px;
     padding: 10px 12px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(69, 69, 100, 0.15);
     cursor: pointer;
     transition: background 0.15s;
     user-select: none;
 }
 
 .task_node_header:hover {
-    background: #f8f8f8;
+    background: var(--surface-container-high);
 }
 
 .task_node_toggle {
@@ -26,25 +41,25 @@
     justify-content: center;
     width: 20px;
     flex-shrink: 0;
-    color: #666;
+    color: var(--on-surface-variant);
 }
 
 .task_node_title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--on-surface);
     flex-shrink: 0;
 }
 
 .task_node_assignee {
     margin-left: auto;
     font-size: 0.8rem;
-    color: #888;
+    color: var(--on-surface-variant);
     white-space: nowrap;
 }
 
 .task_node_children {
-    border-left: 2px solid #e8e8e8;
+    border-left: 2px solid rgba(69, 69, 100, 0.25);
     margin-left: 18px;
 }
 
@@ -57,23 +72,29 @@
     color: #fff;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4), 0 0 6px rgba(159, 163, 255, 0.04);
     transition: box-shadow 0.2s, transform 0.15s;
 }
 
 .flowchart_node:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(159, 163, 255, 0.08);
     transform: translateY(-1px);
 }
 
 .flowchart_node--selected {
-    outline: 2.5px solid #312e81;
+    outline: 2.5px solid var(--primary);
     outline-offset: 3px;
-    box-shadow: 0 0 0 5px rgba(49, 46, 129, 0.3), 0 0 18px 4px rgba(49, 46, 129, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow:
+        0 0 0 5px rgba(159, 163, 255, 0.2),
+        0 0 20px 6px rgba(159, 163, 255, 0.25),
+        0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .flowchart_node--selected:hover {
-    box-shadow: 0 0 0 5px rgba(49, 46, 129, 0.4), 0 0 22px 6px rgba(49, 46, 129, 0.5), 0 4px 16px rgba(0, 0, 0, 0.25);
+    box-shadow:
+        0 0 0 5px rgba(159, 163, 255, 0.3),
+        0 0 28px 8px rgba(159, 163, 255, 0.35),
+        0 6px 24px rgba(0, 0, 0, 0.5);
     transform: translateY(-1px);
 }
 
@@ -98,17 +119,17 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.85);
+    border: 1.5px solid rgba(13, 13, 28, 0.8);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     margin-left: -6px;
-    background: #ffffff;
+    background: var(--surface-container-high);
     font-size: 0.6rem;
     font-weight: 700;
-    color: #555;
+    color: var(--on-surface-variant);
 }
 
 .flowchart_avatar:first-child {
@@ -126,10 +147,10 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.85);
+    border: 1.5px solid rgba(13, 13, 28, 0.8);
     margin-left: -6px;
-    background: rgb(109, 109, 109);
-    color: #fff;
+    background: var(--surface-container-highest);
+    color: var(--on-surface-variant);
     font-size: 0.6rem;
     font-weight: 700;
     display: flex;
@@ -145,13 +166,15 @@
     left: 50%;
     transform: translateX(-50%);
     width: 280px;
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
+    background: rgba(23, 23, 45, 1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--ghost-border);
     border-radius: 10px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--ambient-shadow);
     padding: 14px 38px 14px 16px;
     z-index: 1000;
-    color: #333;
+    color: var(--on-surface);
     animation: flowchart_tooltip_fadein 0.15s ease;
     pointer-events: auto;
 }
@@ -164,9 +187,9 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 1px solid #ddd;
-    background: #f5f5f5;
-    color: #555;
+    border: var(--ghost-border);
+    background: var(--surface-container-high);
+    color: var(--on-surface-variant);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -176,8 +199,8 @@
 }
 
 .flowchart_tooltip_edit_icon:hover {
-    background: #e0e0e0;
-    color: #1a1a1a;
+    background: var(--surface-container-highest);
+    color: var(--primary);
 }
 
 .flowchart_tooltip::after {
@@ -187,7 +210,7 @@
     left: 50%;
     transform: translateX(-50%);
     border: 8px solid transparent;
-    border-top-color: #ffffff;
+    border-top-color: rgba(23, 23, 45, 1);
 }
 
 @keyframes flowchart_tooltip_fadein {
@@ -203,16 +226,17 @@
 }
 
 .flowchart_tooltip_title {
+    font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--on-surface);
     margin-bottom: 6px;
     line-height: 1.3;
 }
 
 .flowchart_tooltip_desc {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--on-surface-variant);
     margin-bottom: 10px;
     line-height: 1.4;
     display: -webkit-box;
@@ -224,7 +248,7 @@
 
 .flowchart_tooltip_assigned {
     font-size: 0.8rem;
-    color: #444;
+    color: var(--on-surface-variant);
     margin-bottom: 12px;
     display: flex;
     align-items: center;
@@ -232,7 +256,7 @@
 }
 
 .flowchart_tooltip_assigned strong {
-    color: #1a1a1a;
+    color: var(--on-surface);
     font-weight: 600;
 }
 
@@ -265,7 +289,7 @@
 }
 
 .flowchart_tooltip_info_label {
-    color: #94a3b8;
+    color: var(--on-surface-variant);
     font-size: 0.73rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -275,7 +299,7 @@
 }
 
 .flowchart_tooltip_info_value {
-    color: #1e293b;
+    color: var(--on-surface);
     font-weight: 500;
     font-size: 0.82rem;
     text-align: right;
@@ -297,14 +321,14 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 1.5px solid rgba(0, 0, 0, 0.12);
-    background: #e2e8f0;
+    border: 1.5px solid rgba(69, 69, 100, 0.3);
+    background: var(--surface-container-highest);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.6rem;
     font-weight: 700;
-    color: #475569;
+    color: var(--on-surface-variant);
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -321,20 +345,22 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 2px 14px;
-    background: #1a1a1a;
-    color: #fff;
+    padding: 6px 14px;
+    background: var(--gradient-primary);
+    color: var(--on-primary);
     border: none;
-    border-radius: 7px;
+    border-radius: 0.75rem;
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: opacity 0.15s, box-shadow 0.15s;
     gap: 6px;
+    box-shadow: 0 4px 12px rgba(159, 163, 255, 0.2);
 }
 
 .flowchart_tooltip_btn:hover {
-    background: #333;
+    opacity: 0.9;
+    box-shadow: 0 6px 18px rgba(159, 163, 255, 0.3);
 }
 
 /* ── Floating Action Panel ── */
@@ -360,16 +386,17 @@
     border-radius: 999px;
     border: none;
     font-size: 0.87rem;
+    font-family: var(--font-body);
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 8px var(--surface-tint);
     transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
     white-space: nowrap;
 }
 
 .flowchart_float_btn:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 12px rgba(159, 163, 255, 0.1);
 }
 
 .flowchart_float_btn:active:not(:disabled) {
@@ -377,28 +404,28 @@
 }
 
 .flowchart_float_btn--primary {
-    background: #312e81;
-    color: #fff;
+    background: var(--gradient-primary);
+    color: var(--on-primary);
 }
 
 .flowchart_float_btn--primary:hover {
-    background: #4338ca;
+    opacity: 0.9;
 }
 
 .flowchart_float_btn--secondary {
-    background: #fff;
-    color: #1e293b;
-    border: 1.5px solid #e2e8f0;
+    background: var(--surface-container);
+    color: var(--on-surface);
+    border: var(--ghost-border);
 }
 
 .flowchart_float_btn--secondary:hover:not(:disabled) {
-    background: #f8fafc;
-    border-color: #c7d2fe;
-    color: #312e81;
+    background: var(--surface-container-high);
+    border-color: rgba(159, 163, 255, 0.3);
+    color: var(--primary);
 }
 
 .flowchart_float_btn--disabled {
-    opacity: 0.45;
+    opacity: 0.35;
     cursor: not-allowed;
     pointer-events: auto;
 }
@@ -407,7 +434,7 @@
     pointer-events: none;
     text-align: center;
     font-size: 0.78rem;
-    color: #94a3b8;
+    color: var(--on-surface-variant);
     padding: 4px 10px;
     font-style: italic;
     line-height: 1.4;
@@ -416,7 +443,7 @@
 .flowchart_float_selected--active {
     font-style: normal;
     font-weight: 600;
-    color: #312e81;
+    color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -427,9 +454,9 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #312e81;
+    background: var(--primary);
     flex-shrink: 0;
-    box-shadow: 0 0 0 2px rgba(49, 46, 129, 0.25);
+    box-shadow: 0 0 0 2px rgba(159, 163, 255, 0.25);
 }
 
 /* ── Progresos Dialog ── */
@@ -442,26 +469,28 @@
 
 .progreso_card {
     padding: 12px 14px;
-    border: 1px solid #eee;
+    border: var(--ghost-border);
     border-radius: 8px;
-    background: #fafafa;
-    transition: box-shadow 0.15s;
+    background: var(--surface-container-low);
+    transition: box-shadow 0.15s, background-color 0.15s;
 }
 
 .progreso_card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    background: var(--surface-container);
 }
 
 .progreso_card_title {
+    font-family: var(--font-display);
     font-size: 0.9rem;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--on-surface);
     margin-bottom: 4px;
 }
 
 .progreso_card_desc {
     font-size: 0.82rem;
-    color: #555;
+    color: var(--on-surface-variant);
     line-height: 1.4;
     margin-bottom: 8px;
 }
@@ -471,7 +500,7 @@
     align-items: center;
     justify-content: space-between;
     font-size: 0.75rem;
-    color: #888;
+    color: var(--on-surface-variant);
 }
 
 .progreso_card_author {
@@ -490,14 +519,26 @@
 .progreso_empty {
     text-align: center;
     padding: 24px;
-    color: #999;
+    color: var(--on-surface-variant);
     font-size: 0.9rem;
 }
 
 /* ── Task Details Dialog ── */
 .td_header {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+    background: linear-gradient(135deg, #0d0d1c 0%, #1a1a3a 40%, #3730a3 100%);
     padding: 20px 24px 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.td_header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-primary);
 }
 
 .td_header_inner {
@@ -508,6 +549,7 @@
 }
 
 .td_title {
+    font-family: var(--font-display);
     font-size: 1.15rem;
     font-weight: 700;
     color: #fff;
@@ -520,8 +562,8 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
     color: #fff;
     display: flex;
     align-items: center;
@@ -533,7 +575,7 @@
 }
 
 .td_close_btn:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 /* Badge pills */
@@ -559,19 +601,19 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #94a3b8;
+    color: var(--on-surface-variant);
     margin-bottom: 8px;
 }
 
 /* Description block */
 .td_description {
     font-size: 0.88rem;
-    color: #374151;
+    color: var(--on-surface);
     line-height: 1.6;
-    background: #f8fafc;
+    background: var(--surface-container-lowest);
     border-radius: 8px;
     padding: 12px 14px;
-    border: 1px solid #e2e8f0;
+    border: var(--ghost-border);
 }
 
 .td_section {
@@ -590,8 +632,8 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-container-lowest);
+    border: var(--ghost-border);
     border-radius: 10px;
     padding: 12px 14px;
 }
@@ -601,18 +643,18 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: #94a3b8;
+    color: var(--on-surface-variant);
 }
 
 .td_info_value {
     font-size: 0.88rem;
     font-weight: 500;
-    color: #1e293b;
+    color: var(--on-surface);
 }
 
 .td_empty_value {
     font-size: 0.85rem;
-    color: #cbd5e1;
+    color: rgba(169, 168, 204, 0.4);
     font-style: italic;
     font-weight: 400;
 }
@@ -629,7 +671,7 @@
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: #ddd;
+    background: var(--surface-container-highest);
     flex-shrink: 0;
     overflow: hidden;
     display: flex;
@@ -637,8 +679,8 @@
     justify-content: center;
     font-size: 0.62rem;
     font-weight: 700;
-    color: #555;
-    border: 1.5px solid rgba(0, 0, 0, 0.08);
+    color: var(--on-surface-variant);
+    border: 1.5px solid rgba(69, 69, 100, 0.25);
 }
 
 .td_mini_avatar img {
@@ -659,14 +701,14 @@
     align-items: center;
     gap: 10px;
     font-size: 0.87rem;
-    color: #1e293b;
+    color: var(--on-surface);
     font-weight: 500;
 }
 
 /* Divider */
 .td_divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+    background: linear-gradient(90deg, transparent, rgba(69, 69, 100, 0.3), transparent);
     margin: 4px 0;
 }
 
@@ -678,30 +720,51 @@
 }
 
 /* ══════════════════════════════════════════════
-   Calendar Event Popover  (matches td_ modal style)
+   Calendar Event Popover
    ══════════════════════════════════════════════ */
 
 .cal_popover {
     position: fixed;
     z-index: 5000;
     width: 290px;
-    background: #ffffff;
+    background: rgba(17, 17, 36, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
+    box-shadow: var(--ambient-shadow);
+    border: var(--ghost-border);
     animation: cal_popover_fadein 0.15s ease;
 }
 
 @keyframes cal_popover_fadein {
-    from { opacity: 0; transform: translateY(6px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* ── Header ── */
 .cal_popover_header {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+    background: linear-gradient(135deg, #0d0d1c 0%, #1a1a3a 50%, #3730a3 100%);
     padding: 16px 18px 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cal_popover_header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-primary);
 }
 
 .cal_popover_header_inner {
@@ -713,6 +776,7 @@
 }
 
 .cal_popover_title {
+    font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 700;
     color: #fff;
@@ -725,8 +789,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
     color: #fff;
     display: flex;
     align-items: center;
@@ -738,7 +802,7 @@
 }
 
 .cal_popover_close:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 /* ── Badge pills (in header) ── */
@@ -777,8 +841,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-container-lowest);
+    border: var(--ghost-border);
     border-radius: 10px;
     padding: 10px 12px;
 }
@@ -790,13 +854,13 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: #94a3b8;
+    color: var(--on-surface-variant);
 }
 
 .cal_popover_info_value {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--on-surface);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -814,17 +878,17 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #94a3b8;
+    color: var(--on-surface-variant);
 }
 
 .cal_popover_description {
     font-size: 0.84rem;
-    color: #374151;
+    color: var(--on-surface);
     line-height: 1.55;
-    background: #f8fafc;
+    background: var(--surface-container-lowest);
     border-radius: 8px;
     padding: 10px 12px;
-    border: 1px solid #e2e8f0;
+    border: var(--ghost-border);
     display: -webkit-box;
     -webkit-line-clamp: 4;
     line-clamp: 4;
@@ -844,15 +908,15 @@
 }
 
 .cal_popover_status--confirmed {
-    color: #16a34a;
-    background: #dcfce7;
-    border: 1px solid #bbf7d0;
+    color: var(--secondary);
+    background: rgba(0, 219, 231, 0.1);
+    border: 1px solid rgba(0, 219, 231, 0.25);
 }
 
 .cal_popover_status--justified {
     color: #d97706;
-    background: #fef3c7;
-    border: 1px solid #fde68a;
+    background: rgba(217, 119, 6, 0.1);
+    border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
 /* ── Action buttons ── */
@@ -869,11 +933,12 @@
     width: 100%;
     padding: 9px 14px;
     border: none;
-    border-radius: 8px;
+    border-radius: 0.75rem;
     font-size: 0.84rem;
+    font-family: var(--font-body);
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
     letter-spacing: 0.01em;
 }
 
@@ -886,98 +951,99 @@
 }
 
 .cal_popover_btn--primary {
-    background: linear-gradient(135deg, #312e81, #4338ca);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(67, 56, 202, 0.35);
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    box-shadow: 0 4px 14px rgba(159, 163, 255, 0.2);
 }
 
 .cal_popover_btn--primary:hover {
-    background: linear-gradient(135deg, #3730a3, #4f46e5);
-    box-shadow: 0 4px 14px rgba(67, 56, 202, 0.45);
+    opacity: 0.9;
+    box-shadow: 0 6px 20px rgba(159, 163, 255, 0.3);
 }
 
 .cal_popover_btn--danger {
-    background: #fff;
-    color: #dc2626;
-    border: 1.5px solid #fecaca;
+    background: var(--surface-container);
+    color: var(--error);
+    border: 1px solid rgba(253, 111, 133, 0.25);
 }
 
 .cal_popover_btn--danger:hover {
-    background: #fef2f2;
-    border-color: #f87171;
+    background: var(--error-container);
+    border-color: rgba(253, 111, 133, 0.4);
 }
 
 /* ══════════════════════════════════════════════
-   FullCalendar — Modern indigo theme overrides
-   Matches the TaskFlowchart details modal visual language
+   FullCalendar — Galactic Overrides
    ══════════════════════════════════════════════ */
 
-/* ── Wrap the calendar in a card ── */
 .fc {
-    font-family: inherit;
+    font-family: var(--font-body);
     border-radius: 12px;
     overflow: hidden;
 }
 
-/* ── Toolbar (header) — clean white ── */
+/* ── Toolbar (header) ── */
 .fc .fc-toolbar {
-    background: #ffffff;
+    background: var(--surface-container) !important;
     padding: 16px 20px !important;
     margin-bottom: 0 !important;
-    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 0 rgba(69, 69, 100, 0.2) !important;
 }
 
 .fc .fc-toolbar-title {
+    font-family: var(--font-display) !important;
     font-size: 1.15rem !important;
     font-weight: 700 !important;
-    color: #1e293b !important;
+    color: var(--on-surface) !important;
     letter-spacing: 0.01em;
 }
 
 /* ── Toolbar buttons ── */
 .fc .fc-button,
 .fc .fc-button-primary {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+    background: var(--surface-container-high) !important;
+    border: 1px solid rgba(69, 69, 100, 0.25) !important;
     border-radius: 8px !important;
-    color: #475569 !important;
+    color: var(--on-surface-variant) !important;
     font-size: 0.85rem !important;
+    font-family: var(--font-body) !important;
     font-weight: 600 !important;
     padding: 6px 14px !important;
     transition: all 0.15s ease !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+    box-shadow: none !important;
     text-transform: capitalize !important;
 }
 
 .fc .fc-button:hover,
 .fc .fc-button-primary:hover {
-    background: #f8fafc !important;
-    border-color: #94a3b8 !important;
-    color: #1e293b !important;
+    background: var(--surface-container-highest) !important;
+    border-color: rgba(159, 163, 255, 0.25) !important;
+    color: var(--on-surface) !important;
 }
 
 .fc .fc-button:focus,
 .fc .fc-button-primary:focus {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(159, 163, 255, 0.15) !important;
+    outline: none !important;
 }
 
 .fc .fc-button-active,
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-    background: #eef2ff !important;
-    border-color: #c7d2fe !important;
-    color: #4338ca !important;
+    background: rgba(159, 163, 255, 0.12) !important;
+    border-color: rgba(159, 163, 255, 0.35) !important;
+    color: var(--primary) !important;
 }
 
 /* ── Day-of-week column headers ── */
 .fc .fc-col-header {
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--surface-container-low) !important;
 }
 
 .fc .fc-col-header-cell {
     padding: 8px 0 !important;
     border: none !important;
-    border-right: 1px solid #e2e8f0 !important;
+    border-right: 1px solid rgba(69, 69, 100, 0.2) !important;
+    background: var(--surface-container-low) !important;
 }
 
 .fc .fc-col-header-cell-cushion {
@@ -985,24 +1051,25 @@
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.08em !important;
-    color: #94a3b8 !important;
+    color: var(--on-surface-variant) !important;
     text-decoration: none !important;
 }
 
 /* ── Day cells ── */
 .fc .fc-daygrid-day {
-    border-color: #e2e8f0 !important;
+    border-color: rgba(69, 69, 100, 0.2) !important;
+    background: var(--surface-container-low) !important;
     transition: background 0.12s;
 }
 
 .fc .fc-daygrid-day:hover {
-    background: #f8fafc !important;
+    background: var(--surface-container) !important;
 }
 
 .fc .fc-daygrid-day-number {
     font-size: 0.82rem !important;
     font-weight: 600 !important;
-    color: #475569 !important;
+    color: var(--on-surface-variant) !important;
     padding: 6px 8px !important;
     text-decoration: none !important;
     border-radius: 6px;
@@ -1010,41 +1077,41 @@
 }
 
 .fc .fc-daygrid-day-number:hover {
-    color: #312e81 !important;
-    background: #eef2ff;
+    color: var(--primary) !important;
+    background: rgba(159, 163, 255, 0.1);
 }
 
 /* ── Today highlight ── */
 .fc .fc-day-today {
-    background: #eef2ff !important;
+    background: rgba(159, 163, 255, 0.06) !important;
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-    color: #4338ca !important;
-    background: #c7d2fe;
+    color: var(--primary) !important;
+    background: rgba(159, 163, 255, 0.15);
     border-radius: 6px;
 }
 
 /* ── Days outside current month ── */
 .fc .fc-day-other .fc-daygrid-day-number {
-    color: #cbd5e1 !important;
+    color: rgba(169, 168, 204, 0.3) !important;
 }
 
 /* ── Event pills ── */
 .fc .fc-event {
     border: none !important;
-    border-radius: 5px !important;
+    border-radius: 4px !important;
     font-size: 0.75rem !important;
     font-weight: 600 !important;
     padding: 2px 6px !important;
     cursor: pointer !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
     transition: filter 0.12s, box-shadow 0.12s !important;
 }
 
 .fc .fc-event:hover {
-    filter: brightness(1.08) !important;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2) !important;
+    filter: brightness(1.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
 }
 
 .fc .fc-event-title {
@@ -1060,28 +1127,29 @@
 .fc .fc-more-link {
     font-size: 0.73rem !important;
     font-weight: 700 !important;
-    color: #4338ca !important;
+    color: var(--primary) !important;
     padding: 0 4px;
 }
 
 .fc .fc-more-link:hover {
-    color: #312e81 !important;
+    color: var(--secondary) !important;
     text-decoration: underline;
 }
 
 /* ── List view ── */
 .fc .fc-list {
     border: none !important;
+    background: var(--surface-container-low) !important;
 }
 
 .fc .fc-list-day-cushion {
-    background: #f1f5f9 !important;
+    background: var(--surface-container) !important;
     padding: 10px 16px !important;
 }
 
 .fc .fc-list-day-text,
 .fc .fc-list-day-side-text {
-    color: #334155 !important;
+    color: var(--on-surface) !important;
     font-weight: 700 !important;
     font-size: 0.82rem !important;
     text-decoration: none !important;
@@ -1091,10 +1159,11 @@
 .fc .fc-list-event {
     cursor: pointer;
     transition: background 0.12s;
+    background: var(--surface-container-low) !important;
 }
 
 .fc .fc-list-event:hover td {
-    background: #f8fafc !important;
+    background: var(--surface-container) !important;
 }
 
 .fc .fc-list-event-dot {
@@ -1105,23 +1174,100 @@
 .fc .fc-list-event-title {
     font-size: 0.84rem !important;
     font-weight: 500 !important;
-    color: #1e293b !important;
+    color: var(--on-surface) !important;
 }
 
 .fc .fc-list-empty {
-    background: #f8fafc !important;
-    color: #94a3b8 !important;
+    background: var(--surface-container-low) !important;
+    color: var(--on-surface-variant) !important;
     font-size: 0.88rem !important;
 }
 
 /* ── Scrollgrid borders ── */
 .fc .fc-scrollgrid,
-.fc .fc-scrollgrid-section > td,
-.fc .fc-scrollgrid-section-body > td {
-    border-color: #e2e8f0 !important;
+.fc .fc-scrollgrid-section>td,
+.fc .fc-scrollgrid-section-body>td {
+    border-color: rgba(69, 69, 100, 0.2) !important;
 }
 
 .fc .fc-scrollgrid {
     border-radius: 0 0 12px 12px !important;
     border-top: none !important;
+}
+
+/* ══════════════════════════════════════════════
+   ReactFlow — Dark Canvas Overrides
+   ══════════════════════════════════════════════ */
+
+/* Background dots/grid pattern */
+.react-flow__background {
+    background-color: var(--surface-container-low) !important;
+}
+
+.react-flow__background pattern circle,
+.react-flow__background pattern rect {
+    fill: rgba(69, 69, 100, 0.35) !important;
+}
+
+/* Edge lines and arrowheads */
+.react-flow__edge-path {
+    stroke: rgba(159, 163, 255, 0.4) !important;
+    stroke-width: 1.5 !important;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+    stroke: var(--primary) !important;
+    stroke-dasharray: 5 !important;
+}
+
+.react-flow__arrowhead polyline {
+    fill: rgba(159, 163, 255, 0.5) !important;
+    stroke: rgba(159, 163, 255, 0.5) !important;
+}
+
+/* Controls panel */
+.react-flow__controls {
+    background: var(--surface-container) !important;
+    border: var(--ghost-border) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden;
+}
+
+.react-flow__controls-button {
+    background: var(--surface-container) !important;
+    border-bottom: 1px solid rgba(69, 69, 100, 0.15) !important;
+    color: var(--on-surface-variant) !important;
+    fill: var(--on-surface-variant) !important;
+    transition: background 0.15s !important;
+}
+
+.react-flow__controls-button:hover {
+    background: var(--surface-container-high) !important;
+    fill: var(--on-surface) !important;
+}
+
+.react-flow__controls-button svg {
+    fill: currentColor !important;
+}
+
+/* Minimap */
+.react-flow__minimap {
+    background: var(--surface-container) !important;
+    border: var(--ghost-border) !important;
+    border-radius: 8px !important;
+}
+
+.react-flow__minimap-mask {
+    fill: rgba(13, 13, 28, 0.6) !important;
+}
+
+/* Attribution badge */
+.react-flow__attribution {
+    background: rgba(17, 17, 36, 0.6) !important;
+    color: var(--on-surface-variant) !important;
+}
+
+.react-flow__attribution a {
+    color: var(--primary) !important;
 }
