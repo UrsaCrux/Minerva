@@ -18,6 +18,7 @@ const PERMISOS_MAP = {
     1: "Editar usuarios",
     2: "Crear eventos en calendario",
     3: "Control sobre tareas",
+    4: "Gestionar informes",
 }
 
 export default function UsuariosPage() {

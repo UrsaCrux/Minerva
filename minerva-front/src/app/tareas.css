@@ -719,6 +719,140 @@
     padding-bottom: 4px;
 }
 
+/* ── Toggle "Añadir" button ── */
+.td_progreso_toggle_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: var(--ghost-border);
+    background: var(--surface-container-high);
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.td_progreso_toggle_btn:hover {
+    background: var(--surface-container-highest);
+    box-shadow: 0 0 0 2px rgba(159, 163, 255, 0.15);
+}
+
+/* ── Inline Progreso Form ── */
+.td_progreso_form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--surface-container-lowest);
+    border: var(--ghost-border);
+    animation: flowchart_tooltip_fadein 0.15s ease;
+}
+
+.td_progreso_input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid rgba(69, 69, 100, 0.35);
+    border-radius: 7px;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    color: var(--on-surface);
+    background: var(--surface-container-low);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+}
+
+.td_progreso_input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary), 0 0 6px rgba(159, 163, 255, 0.3);
+}
+
+.td_progreso_textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid rgba(69, 69, 100, 0.35);
+    border-radius: 7px;
+    font-size: 0.83rem;
+    font-family: var(--font-body);
+    color: var(--on-surface);
+    background: var(--surface-container-low);
+    outline: none;
+    resize: vertical;
+    min-height: 48px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+}
+
+.td_progreso_textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary), 0 0 6px rgba(159, 163, 255, 0.3);
+}
+
+.td_progreso_submit_btn {
+    align-self: flex-end;
+    padding: 7px 16px;
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.82rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(159, 163, 255, 0.2);
+}
+
+.td_progreso_submit_btn:hover:not(:disabled) {
+    opacity: 0.9;
+    box-shadow: 0 6px 18px rgba(159, 163, 255, 0.3);
+}
+
+.td_progreso_submit_btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Complete Task Button ── */
+.td_complete_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, box-shadow 0.15s, transform 0.12s;
+    box-shadow: 0 4px 14px rgba(159, 163, 255, 0.2);
+}
+
+.td_complete_btn:hover:not(:disabled) {
+    opacity: 0.9;
+    box-shadow: 0 6px 20px rgba(159, 163, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.td_complete_btn--disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.td_complete_btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
 /* ══════════════════════════════════════════════
    Calendar Event Popover
    ══════════════════════════════════════════════ */

@@ -33,11 +33,30 @@ A massive, orbital timeline and event planner spanning the organization.
 You can also create new events directly using the celestial event builder modal:
 ![Create Event Modal](/screenshots/create_event_modal_1775338701149.png)
 
-### 5. User Directory (Usuarios)
+### 5. Progress Tracking (Progresos)
+From the **Dashboard → Tus Asignaciones** panel, click "Ver detalles" on any task to open the Task Details dialog.
+
+*To use:* Inside the dialog, click the **"Añadir"** button next to "Historial de Progreso" to reveal the inline form. Fill in a title and optionally a description, then click **"Guardar Progreso"**. Entries appear in reverse chronological order with author avatars.
+
+### 6. Task Completion
+The Task Details dialog also features a **"Completar Tarea"** button in the footer.
+
+*How it works:*
+- The button is only enabled when **all subtasks** (tasks whose `desbloquea` points to this task) are marked as `completado`.
+- If subtasks are incomplete, the button appears disabled with reduced opacity.
+- Server-side enforcement via a Postgres trigger prevents bypassing this rule from any client.
+- Completed tasks are automatically hidden from the "Tus Asignaciones" list.
+
+### 7. User Directory (Usuarios)
 Global directory for team tracking and operational assignment.
 ![Usuarios Database](/screenshots/usuarios_page_real_1775338656735.png)
 
 *To use:* Check out team roles, assign task capabilities, and manage cross-system availability. Follows the "Tonal Layering" design philosophy where depth defines organization rather than lines.
+
+### 8. Meeting Reports (Informes)
+Navigate to `/informes` from the sidebar to view all meeting reports.
+
+*To use:* Users with **permiso 4** can click "Nuevo Informe" to upload a PDF report with metadata: title, date, type (Reunión General, Comisión de Proyectos, etc.), and optionally tag attendees from the profiles list. All users can browse the card grid and click any card to view details and download the PDF.
 
 ---
 

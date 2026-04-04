@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react"
-import { getTaskProgresos } from "../utils/supa"
-import { MdClose } from "react-icons/md"
+import { getTaskProgresos, createProgreso, completeTask, canCompleteTask } from "../utils/supa"
+import { MdClose, MdAdd, MdCheckCircle } from "react-icons/md"
 import { Button, Dialog, DialogContent, DialogActions, CircularProgress } from "@mui/material"
+
+const MIN_TITULO_LENGTH = 3
 
 function getInitials(name) {
     if (!name) return "?"
@@ -35,23 +37,77 @@ const PRIORITY_META = {
     "3": { label: "Baja", color: "#9fa3ff", bg: "rgba(159,163,255,0.10)" },
 }
 
-export default function TaskDetailsDialog({ task, onClose, teams }) {
+export default function TaskDetailsDialog({ task, onClose, teams, userId, onTaskUpdated }) {
     const [progresos, setProgresos] = useState([])
     const [loading, setLoading] = useState(true)
+    const [showForm, setShowForm] = useState(false)
+    const [titulo, setTitulo] = useState("")
+    const [descripcion, setDescripcion] = useState("")
+    const [submitting, setSubmitting] = useState(false)
+    const [completable, setCompletable] = useState(false)
+    const [completing, setCompleting] = useState(false)
+
+    const isCompleted = task.status === "completado"
 
     useEffect(() => {
         let isMounted = true
-        async function fetchProgresos() {
+        async function fetchData() {
             setLoading(true)
-            const { progresos: data } = await getTaskProgresos(task.id)
+            const [{ progresos: data }, canComplete] = await Promise.all([
+                getTaskProgresos(task.id),
+                canCompleteTask(task.id),
+            ])
             if (isMounted) {
                 setProgresos(data || [])
+                setCompletable(canComplete)
                 setLoading(false)
             }
         }
-        fetchProgresos()
+        fetchData()
         return () => { isMounted = false }
     }, [task.id])
+
+    async function handleAddProgreso(e) {
+        e.preventDefault()
+        if (titulo.trim().length < MIN_TITULO_LENGTH) return
+
+        setSubmitting(true)
+        const { progreso, error } = await createProgreso(task.id, titulo.trim(), descripcion.trim())
+        setSubmitting(false)
+
+        if (error) {
+            console.error("Error creating progreso:", error)
+            alert("Error al crear progreso: " + (error.message || "desconocido"))
+            return
+        }
+
+        setProgresos(prev => [progreso, ...prev])
+        setTitulo("")
+        setDescripcion("")
+        setShowForm(false)
+    }
+
+    async function handleComplete() {
+        if (isCompleted || !completable) return
+
+        setCompleting(true)
+        const { task: updated, error } = await completeTask(task.id)
+        setCompleting(false)
+
+        if (error) {
+            const isSubtaskError = error.message?.includes("not all subtasks")
+                || error.code === "P0001"
+            if (isSubtaskError) {
+                alert("No se puede completar: hay subtareas pendientes.")
+            } else {
+                alert("Error al completar: " + (error.message || "desconocido"))
+            }
+            return
+        }
+
+        if (onTaskUpdated && updated) onTaskUpdated(updated)
+        onClose()
+    }
 
     const teamName = teams?.find(t => t.id === task.team_id)?.name
     const statusMeta = STATUS_META[task.status] || { label: task.status || "—", color: "#64748b", bg: "#f1f5f9" }
@@ -100,7 +156,6 @@ export default function TaskDetailsDialog({ task, onClose, teams }) {
 
                 {/* ── Info Grid ── */}
                 <div className="td_info_grid">
-                    {/* Assigned to */}
                     <div className="td_info_cell">
                         <div className="td_info_label">Asignado a</div>
                         <div className="td_info_value td_person_row">
@@ -120,7 +175,6 @@ export default function TaskDetailsDialog({ task, onClose, teams }) {
                         </div>
                     </div>
 
-                    {/* Due date */}
                     <div className="td_info_cell">
                         <div className="td_info_label">Fecha límite</div>
                         <div className="td_info_value">
@@ -157,7 +211,50 @@ export default function TaskDetailsDialog({ task, onClose, teams }) {
 
                 {/* ── Progresos Section ── */}
                 <div className="td_progresos_section">
-                    <div className="td_section_label" style={{ marginBottom: 12 }}>Historial de Progreso</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div className="td_section_label" style={{ marginBottom: 0 }}>Historial de Progreso</div>
+                        {!isCompleted && (
+                            <button
+                                className="td_progreso_toggle_btn"
+                                onClick={() => setShowForm(prev => !prev)}
+                                title="Añadir progreso"
+                            >
+                                <MdAdd size={16} />
+                                <span>{showForm ? "Cancelar" : "Añadir"}</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* ── Inline Progreso Form ── */}
+                    {showForm && (
+                        <form className="td_progreso_form" onSubmit={handleAddProgreso}>
+                            <input
+                                className="td_progreso_input"
+                                type="text"
+                                placeholder="Título del progreso"
+                                value={titulo}
+                                onChange={e => setTitulo(e.target.value)}
+                                required
+                                minLength={MIN_TITULO_LENGTH}
+                                autoFocus
+                            />
+                            <textarea
+                                className="td_progreso_textarea"
+                                placeholder="Descripción (opcional)"
+                                value={descripcion}
+                                onChange={e => setDescripcion(e.target.value)}
+                                rows={2}
+                            />
+                            <button
+                                className="td_progreso_submit_btn"
+                                type="submit"
+                                disabled={submitting || titulo.trim().length < MIN_TITULO_LENGTH}
+                            >
+                                {submitting ? "Guardando..." : "Guardar Progreso"}
+                            </button>
+                        </form>
+                    )}
+
                     {loading ? (
                         <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
                             <CircularProgress size={28} />
@@ -188,8 +285,19 @@ export default function TaskDetailsDialog({ task, onClose, teams }) {
                 </div>
             </DialogContent>
 
-            <DialogActions style={{ padding: "12px 24px 20px" }}>
+            <DialogActions style={{ padding: "12px 24px 20px", gap: 8 }}>
                 <Button onClick={onClose} variant="outlined" color="inherit">Cerrar</Button>
+                {!isCompleted && (
+                    <button
+                        className={`td_complete_btn${!completable ? " td_complete_btn--disabled" : ""}`}
+                        onClick={handleComplete}
+                        disabled={!completable || completing}
+                        title={completable ? "Marcar como completada" : "Hay subtareas pendientes"}
+                    >
+                        <MdCheckCircle size={18} />
+                        <span>{completing ? "Completando..." : "Completar Tarea"}</span>
+                    </button>
+                )}
             </DialogActions>
         </Dialog>
     )

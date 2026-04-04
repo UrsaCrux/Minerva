@@ -6,6 +6,7 @@ import CalendarView from "@/app/components/CalendarView"
 import AssignedTasksCol from "@/app/components/AssignedTasksCol"
 import DashboardAnnouncements from "@/app/components/DashboardAnnouncements"
 import DashboardUpcomingEvents from "@/app/components/DashboardUpcomingEvents"
+import DashboardAsistencia from "@/app/components/DashboardAsistencia"
 
 export default function Home() {
   const [userId, setUserId] = useState(null)
@@ -37,6 +38,7 @@ export default function Home() {
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 20, overflow: 'hidden' }}>
+          <DashboardAsistencia userId={userId} />
           <DashboardAnnouncements />
           <DashboardUpcomingEvents userId={userId} />
         </div>

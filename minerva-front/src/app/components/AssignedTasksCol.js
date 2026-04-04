@@ -21,6 +21,11 @@ export default function AssignedTasksCol({ userId, teams }) {
         loadTasks()
     }, [userId])
 
+    function handleTaskUpdated(updatedTask) {
+        setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t))
+        setSelectedTask(null)
+    }
+
     return (
         <div className="home_card db_col_assigned">
             <h2 className="db_card_title" style={{ marginBottom: 12 }}>Tus Asignaciones</h2>
@@ -30,7 +35,7 @@ export default function AssignedTasksCol({ userId, teams }) {
                 ) : tasks.length === 0 ? (
                     <p style={{ color: "var(--on-surface-variant)", fontSize: "0.9rem" }}>No tienes trabajos asignados.</p>
                 ) : (
-                    tasks.map(task => {
+                    tasks.filter(t => t.status !== "completado").map(task => {
                         const isPrimary = task.assigned_to === userId
                         const roleLabel = isPrimary ? "Responsable" : "Participante"
                         
@@ -65,6 +70,8 @@ export default function AssignedTasksCol({ userId, teams }) {
                     task={selectedTask} 
                     onClose={() => setSelectedTask(null)} 
                     teams={teams}
+                    userId={userId}
+                    onTaskUpdated={handleTaskUpdated}
                 />
             )}
         </div>

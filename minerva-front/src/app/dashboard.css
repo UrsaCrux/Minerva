@@ -790,3 +790,253 @@
 .profile_popup_signout:hover {
     background-color: var(--error-container);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   INFORMES — Meeting Reports
+   ═══════════════════════════════════════════════════════════ */
+
+.inf_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 4px;
+}
+
+.inf_card {
+    background: var(--surface-container);
+    border: var(--ghost-border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inf_card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 10px var(--surface-tint);
+    background: var(--surface-container-high);
+}
+
+.inf_card_top_glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--primary), transparent);
+}
+
+.inf_card_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.inf_card_tipo {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--primary);
+    background: rgba(159, 163, 255, 0.12);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.inf_card_fecha {
+    font-size: 0.78rem;
+    color: var(--on-surface-variant);
+    white-space: nowrap;
+}
+
+.inf_card_title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    line-height: 1.3;
+}
+
+.inf_card_footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.inf_card_meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--on-surface-variant);
+}
+
+.inf_card_pdf_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--error);
+    background: var(--error-container);
+    padding: 2px 7px;
+    border-radius: 999px;
+}
+
+.inf_card_evento_badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(235, 178, 255, 0.12);
+    color: var(--tertiary);
+    font-size: 0.7rem;
+}
+
+.inf_card_author {
+    font-size: 0.75rem;
+    color: var(--on-surface-variant);
+    font-style: italic;
+}
+
+/* Create button */
+.inf_create_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    border: none;
+    border-radius: 999px;
+    font-size: 0.87rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, box-shadow 0.15s, transform 0.12s;
+    box-shadow: 0 4px 14px rgba(159, 163, 255, 0.2);
+}
+
+.inf_create_btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(159, 163, 255, 0.3);
+}
+
+/* PDF link */
+.inf_pdf_link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--surface-container-lowest);
+    border: var(--ghost-border);
+    border-radius: 10px;
+    color: var(--error);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.inf_pdf_link:hover {
+    background: var(--surface-container-low);
+    box-shadow: 0 0 0 2px rgba(253, 111, 133, 0.15);
+}
+
+/* Empty state */
+.inf_empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--on-surface-variant);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+/* Form group */
+.inf_form_group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inf_form_label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--on-surface-variant);
+}
+
+/* File upload */
+.inf_file_upload_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface-container-lowest);
+    border: 1px dashed rgba(69, 69, 100, 0.4);
+    border-radius: 10px;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+    width: 100%;
+}
+
+.inf_file_upload_btn:hover {
+    border-color: var(--primary);
+    background: var(--surface-container-low);
+    color: var(--primary);
+}
+
+/* Attendee chips grid */
+.inf_asistentes_grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+.inf_asistente_chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    border: var(--ghost-border);
+    background: var(--surface-container-low);
+    color: var(--on-surface-variant);
+    font-size: 0.78rem;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.inf_asistente_chip:hover {
+    background: var(--surface-container-high);
+    color: var(--on-surface);
+}
+
+.inf_asistente_chip--selected {
+    background: rgba(159, 163, 255, 0.15);
+    border-color: rgba(159, 163, 255, 0.35);
+    color: var(--primary);
+}

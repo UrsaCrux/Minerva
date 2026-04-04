@@ -616,4 +616,193 @@ export async function getAnuncios() {
     return { anuncios: data ?? [], error }
 }
 
+/**
+ * Fetches attendance stats for mandatory events for a user, based on Informes structure.
+ */
+export async function getAsistenciaStats(userId) {
+    // 1. Get mandatory events where the user is invited
+    const { data: mandatoryEvents, error: eventsErr } = await supaClient
+        .from("eventos_usuarios")
+        .select("asistencia, eventos!inner(id_evento, obligatorio)")
+        .eq("id_usuario", userId)
+        .eq("eventos.obligatorio", true)
+
+    if (eventsErr) return { stats: null, error: eventsErr }
+
+    const mandatoryEventIds = mandatoryEvents.map(e => e.eventos.id_evento)
+    if (mandatoryEventIds.length === 0) {
+        return { stats: { percentage: 100, total: 0, attended: 0, justified: 0 }, error: null }
+    }
+
+    // 2. Get informes linked to those mandatory events
+    const { data: informes, error: infErr } = await supaClient
+        .from("informes")
+        .select("id_evento, informe_asistentes(id_profile)")
+        .in("id_evento", mandatoryEventIds)
+
+    if (infErr) return { stats: null, error: infErr }
+
+    const total = informes.length
+    if (total === 0) {
+        return { stats: { percentage: 100, total: 0, attended: 0, justified: 0 }, error: null }
+    }
+
+    let attended = 0
+    let justified = 0
+
+    for (const inf of informes) {
+        const present = inf.informe_asistentes?.some(a => a.id_profile === userId)
+        if (present) {
+            attended++
+        } else {
+            // Check if they were justified in the event
+            const eventUser = mandatoryEvents.find(e => e.eventos.id_evento === inf.id_evento)
+            if (eventUser && eventUser.asistencia === 2) justified++
+        }
+    }
+
+    const effectiveTotal = total - justified
+    const percentage = effectiveTotal === 0 ? 100 : Math.round((attended / effectiveTotal) * 100)
+
+    return { stats: { percentage, total, attended, justified }, error: null }
+}
+
+/**
+ * Creates a new progreso entry for a task.
+ * @param {number} taskId
+ * @param {string} titulo
+ * @param {string} [descripcion]
+ */
+export async function createProgreso(taskId, titulo, descripcion) {
+    const { data: { session } } = await supaClient.auth.getSession()
+    const userId = session?.user?.id
+    if (!userId) return { progreso: null, error: { message: "No session" } }
+
+    const { data, error } = await supaClient
+        .from("progresos")
+        .insert({ id_task: taskId, titulo, descripcion: descripcion || null, created_by: userId })
+        .select("*, profiles:created_by(full_name, username, avatar_url)")
+        .single()
+
+    return { progreso: data ?? null, error }
+}
+
+/**
+ * Attempts to mark a task as completed. Server trigger blocks if subtasks pending.
+ * @param {number} taskId
+ */
+export async function completeTask(taskId) {
+    const { data: { session } } = await supaClient.auth.getSession()
+    const userId = session?.user?.id
+
+    const { data, error } = await supaClient
+        .from("tasks")
+        .update({ status: "completado", last_edited_by: userId, updated_at: new Date().toISOString() })
+        .eq("id", taskId)
+        .select("*, assigned_to_profile:assigned_to(id, full_name, username, avatar_url), tasks_profiles(id_profile, profiles:id_profile(id, full_name, username, avatar_url))")
+
+    return { task: data?.[0] ?? null, error }
+}
+
+/**
+ * Client-side check: returns true if all subtasks of a task are completed.
+ * @param {number} taskId
+ */
+export async function canCompleteTask(taskId) {
+    const { data, error } = await supaClient
+        .from("tasks")
+        .select("id, status")
+        .eq("desbloquea", taskId)
+        .neq("status", "completado")
+
+    if (error) return false
+    return data.length === 0
+}
+
+// ── Informes (Meeting Reports) ──
+
+/**
+ * Fetches all informes with creator profile and attendee count.
+ */
+export async function getInformes() {
+    const { data, error } = await supaClient
+        .from("informes")
+        .select("*, profiles:created_by(full_name, username, avatar_url), informe_asistentes(id_profile)")
+        .order("fecha", { ascending: false })
+    return { informes: data ?? [], error }
+}
+
+/**
+ * Fetches a single informe with full attendee profiles.
+ * @param {number} informeId
+ */
+export async function getInformeById(informeId) {
+    const { data, error } = await supaClient
+        .from("informes")
+        .select("*, profiles:created_by(full_name, username, avatar_url), informe_asistentes(id_profile, profiles:id_profile(id, full_name, username, avatar_url))")
+        .eq("id", informeId)
+        .single()
+    return { informe: data ?? null, error }
+}
+
+/**
+ * Creates an informe, uploads PDF, and inserts attendees.
+ * @param {{ titulo: string, fecha: string, tipo: string }} informeData
+ * @param {File} pdfFile
+ * @param {string[]} asistentesIds
+ */
+export async function createInforme(informeData, pdfFile, asistentesIds) {
+    const { data: { session } } = await supaClient.auth.getSession()
+    const userId = session?.user?.id
+    if (!userId) return { informe: null, error: { message: "No session" } }
+
+    // Upload PDF
+    let pdfUrl = null
+    if (pdfFile) {
+        const fileName = `${Date.now()}-${pdfFile.name}`
+        const { error: uploadError } = await supaClient.storage
+            .from("informes")
+            .upload(fileName, pdfFile)
+
+        if (uploadError) return { informe: null, error: uploadError }
+
+        const { data: { publicUrl } } = supaClient.storage
+            .from("informes")
+            .getPublicUrl(fileName)
+        pdfUrl = publicUrl
+    }
+
+    // Insert informe
+    const { data: informe, error: insertError } = await supaClient
+        .from("informes")
+        .insert({ ...informeData, pdf_url: pdfUrl, created_by: userId })
+        .select()
+        .single()
+
+    if (insertError || !informe) return { informe: null, error: insertError }
+
+    // Insert attendees
+    if (asistentesIds.length > 0) {
+        const rows = asistentesIds.map(pid => ({ id_informe: informe.id, id_profile: pid }))
+        const { error: asisError } = await supaClient
+            .from("informe_asistentes")
+            .insert(rows)
+        if (asisError) console.error("Error inserting attendees:", asisError)
+    }
+
+    return { informe, error: null }
+}
+
+/**
+ * Deletes an informe (cascade deletes attendees).
+ * @param {number} informeId
+ */
+export async function deleteInforme(informeId) {
+    const { error } = await supaClient
+        .from("informes")
+        .delete()
+        .eq("id", informeId)
+    return { error }
+}
+
 export { supaClient }
