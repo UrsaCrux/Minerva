@@ -8,30 +8,30 @@ Below is a detailed walkthrough of the platform accompanied by real screenshots 
 
 ### 1. Authentication & Login
 Navigate to `/login` to access the robust, glass-morphic secure login panel. 
-![Minerva Login Screen](/screenshots/login_page_1775338539791.png)
+![Minerva Login Screen](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/login_page_1775338539791.png?raw=true)
 
 *To use:* Enter your credentials (such as `aarevalor` / `123456` in dev) and click standard login. The container is powered by our global design tokens (`surface_container_lowest`) for recessed ambiance.
 
 ### 2. Dashboard (Inicio)
 The primary landing screen. It displays your immediate telemetry.
-![Dashboard Inicio](/screenshots/dashboard_inicio_1775338610335.png)
+![Dashboard Inicio](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/dashboard_inicio_1775338610335.png?raw=true)
 
 *To use:* Here you can quickly gather actionable intelligence from upcoming events, your assigned critical tasks, and organizational news. The layout champions asymmetry and breathing room—core tenets of our design philosophy.
 
 ### 3. Task Workflows (Tareas)
 A sophisticated view mapping dependencies across system tasks.
-![Tareas Pipeline](/screenshots/tareas_page_real_1775338643720.png)
+![Tareas Pipeline](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/tareas_page_real_1775338643720.png?raw=true)
 
 *To use:* Tasks present themselves based on the completion of subtask hierarchies. Interactive nodes handle team assignments (Responsable vs. Participante) and display real-time user avatars on node progression. Statuses leverage our "No-line" `primary` glowing aesthetics.
 
 ### 4. Events Calendar (Eventos)
 A massive, orbital timeline and event planner spanning the organization.
-![Eventos View](/screenshots/eventos_page_real_1775338683775.png)
+![Eventos View](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/eventos_page_real_1775338683775.png?raw=true)
 
 *To use:* Click on any event to pull up a custom popover with deep-space glass aesthetics and metadata pills. Easily justify absences through the module interfaces. The view integrates *FullCalendar* with a custom dark-mode adaptation.
 
 You can also create new events directly using the celestial event builder modal:
-![Create Event Modal](/screenshots/create_event_modal_1775338701149.png)
+![Create Event Modal](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/create_event_modal_1775338701149.png?raw=true)
 
 ### 5. Progress Tracking (Progresos)
 From the **Dashboard → Tus Asignaciones** panel, click "Ver detalles" on any task to open the Task Details dialog.
@@ -49,7 +49,7 @@ The Task Details dialog also features a **"Completar Tarea"** button in the foot
 
 ### 7. User Directory (Usuarios)
 Global directory for team tracking and operational assignment.
-![Usuarios Database](/screenshots/usuarios_page_real_1775338656735.png)
+![Usuarios Database](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/usuarios_page_real_1775338656735.png?raw=true)
 
 *To use:* Check out team roles, assign task capabilities, and manage cross-system availability. Follows the "Tonal Layering" design philosophy where depth defines organization rather than lines.
 
