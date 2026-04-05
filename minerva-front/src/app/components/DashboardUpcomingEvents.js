@@ -12,7 +12,6 @@ export default function DashboardUpcomingEvents({ userId }) {
             setLoading(true)
             const { eventos, error } = await getEventos()
             if (isMounted && !error) {
-                // Filter to upcoming/current events only
                 const now = new Date()
                 const future = (eventos || []).filter(e => {
                     if (e.fin) {
@@ -20,8 +19,6 @@ export default function DashboardUpcomingEvents({ userId }) {
                     }
                     return new Date(e.inicio) >= now
                 })
-                
-                // only take the first 5
                 setEventos(future.slice(0, 5))
             }
             if (isMounted) setLoading(false)
@@ -75,3 +72,4 @@ export default function DashboardUpcomingEvents({ userId }) {
         </div>
     )
 }
+

@@ -30,11 +30,12 @@ trigger: always_on
 * **Strict Error Handling:** No empty `try/catch` blocks. Handle, log, or rethrow errors with clear messages.
 * **Strict Typing:** No `any` or weak dynamic types. Define explicit input/output interfaces.
 
-## 5. Communication (Caveman Mode)
+## 5. Communication (Caveman Mode, always by default)
 * Talk like caveman. Few words.
 * No explain code. No greetings. No yapping.
 * Speak ONLY if blocked or need human input. 
 * Otherwise, output ONLY code.
+* no phrases "like Let me verify it builds:" just like "me verify builds"
 
 ---
 
