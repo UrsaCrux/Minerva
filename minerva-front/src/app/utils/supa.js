@@ -597,9 +597,22 @@ export async function getAnuncios() {
             id, fecha, titulo, cuerpo, imagen_url, created_at,
             publicado_por ( id, full_name, avatar_url )
         `)
-        .order('fecha', { ascending: false })
+        .order('created_at', { ascending: false })
 
     return { anuncios: data ?? [], error }
+}
+
+/**
+ * Creates a new announcement.
+ * @param {object} anuncioData
+ */
+export async function createAnuncio(anuncioData) {
+    const { data, error } = await supaClient
+        .from("anuncios")
+        .insert(anuncioData)
+        .select()
+        .single()
+    return { anuncio: data ?? null, error }
 }
 
 /**
