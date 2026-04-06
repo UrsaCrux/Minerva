@@ -1,9 +1,9 @@
 "use client"
 import { useEffect, useState, useRef, useCallback, useMemo } from "react"
-import { getGoalTasks, getPrerequisiteTasks, getTeams, createTask, updateTask, hasPermiso, getAllProfiles, addProfilesToTask, syncTaskProfiles, getTaskProgresos, getTeamMembers } from "../utils/supa"
-import { MdAdd, MdClose, MdVisibility, MdEdit } from "react-icons/md"
+import { getGoalTasks, getPrerequisiteTasks, getTeams, createTask, updateTask, hasPermiso, getAllProfiles, addProfilesToTask, syncTaskProfiles, getTaskProgresos } from "../utils/supa"
+import { MdAdd, MdClose, MdVisibility, MdEdit, MdCheckCircleOutline, MdCheckCircle } from "react-icons/md"
 import { createClient } from "../utils/client"
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Handle, Position } from '@xyflow/react';
+import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Handle, Position, Background, BackgroundVariant } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import '../tareas.css';
 import { resolveCollisions } from './resolveCollisions';
@@ -12,11 +12,11 @@ import TaskDetailsDialog from "./TaskDetailsDialog"
 
 // Hardcoded colors for teams mapped to vibrant Celestial Navigator Theme colors
 const TEAM_COLORS = {
-    1: "#9fa2ffc9", // Primary (Soft Blue/Purple)
-    2: "#00dbe7ac", // Secondary (Cyan)
-    3: "#eab2ffb5", // Tertiary (Light Purple)
-    4: "#fd6f84d2", // Error (Salmon Red)
-    5: "#a9a8cce2", // On-surface variant (Lavender grey)
+    1: "#9fa2ffff", // Primary (Soft Blue/Purple)
+    2: "#00bac4ff", // Secondary (Cyan)
+    3: "#eab2ffff", // Tertiary (Light Purple)
+    4: "#fd6f84ff", // Error (Salmon Red)
+    5: "#a9a8ccff", // On-surface variant (Lavender grey)
     default: "#454564" // Outline variant (Muted default)
 }
 
@@ -67,6 +67,7 @@ function TaskNode({ data }) {
     const task = data.task
     const avatars = getTaskAvatars(task)
     const MAX_AVATARS = 4
+    const isCompleted = task.status === "completado"
 
     const bgColor = TEAM_COLORS[task.team_id] || TEAM_COLORS.default
 
@@ -108,7 +109,7 @@ function TaskNode({ data }) {
             <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
             <div
                 ref={nodeRef}
-                className={`flowchart_node${isSelected ? ' flowchart_node--selected' : ''}`}
+                className={`flowchart_node${isSelected ? ' flowchart_node--selected' : ''}${isCompleted ? ' flowchart_node--completed' : ''}`}
                 style={{
                     background: bgColor,
                     borderLeft: getPriorityBorder(task.priority),
@@ -139,11 +140,17 @@ function TaskNode({ data }) {
                 {/* Hover Tooltip */}
                 {hovered && (
                     <div
-                        className="flowchart_tooltip"
+                        className={`flowchart_tooltip${isCompleted ? ' flowchart_tooltip--completed' : ''}`}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                         onClick={(e) => e.stopPropagation()}
                     >
+                        {isCompleted && (
+                            <div className="flowchart_tooltip_completed_banner">
+                                <MdCheckCircle size={13} />
+                                <span>Tarea completada</span>
+                            </div>
+                        )}
                         {data.canEdit && (
                             <button className="flowchart_tooltip_edit_icon" onClick={handleEdit} title="Editar tarea">
                                 <MdEdit size={14} />
@@ -199,6 +206,7 @@ function TaskNode({ data }) {
                     task={task}
                     onClose={() => setShowProgresos(false)}
                     teams={data.teams || []}
+                    onTaskUpdated={data.onTaskUpdated}
                 />
             )}
 
@@ -246,6 +254,7 @@ export default function TaskFlowchart() {
     const [nodes, setNodes] = useState([]);
     const [edges, setEdges] = useState([]);
     const [profiles, setProfiles] = useState([])
+    const [showCompleted, setShowCompleted] = useState(false)
     // Track which nodes currently have their children expanded
     const [expandedNodes, setExpandedNodes] = useState(new Set())
 
@@ -284,6 +293,8 @@ export default function TaskFlowchart() {
             return n
         }))
         setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t))
+        // Deselect if completing the currently selected task (it will be hidden)
+        if (updatedTask.status === "completado") setSelectedTask(null)
     }
 
     // Keep selectedTaskId and canEdit fresh on every node whenever they change
@@ -456,14 +467,34 @@ export default function TaskFlowchart() {
         })
     }
 
+    // Filter out completed nodes when toggle is OFF
+    const visibleNodes = showCompleted
+        ? nodes
+        : nodes.map(n => n.data?.task?.status === "completado"
+            ? { ...n, hidden: true }
+            : n
+        )
+
+    const visibleEdges = showCompleted
+        ? edges
+        : edges.filter(e => {
+            const srcHidden = nodes.find(n => n.id === e.source)?.data?.task?.status === "completado"
+            const tgtHidden = nodes.find(n => n.id === e.target)?.data?.task?.status === "completado"
+            return !srcHidden && !tgtHidden
+        })
+
+    function handlePaneClick() {
+        setSelectedTask(null)
+    }
+
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             {/* Graph Container — full height, floating controls inside */}
             <div style={{ flex: 1, overflow: "auto", background: "var(--surface-container-low)", borderRadius: 8, border: "1px solid rgba(69,69,100,0.18)", minHeight: 400, position: "relative" }}>
                 <div style={{ width: '100%', height: '100%' }}>
                     <ReactFlow
-                        nodes={nodes}
-                        edges={edges}
+                        nodes={visibleNodes}
+                        edges={visibleEdges}
                         nodeTypes={nodeTypes}
                         nodesConnectable={false}
                         onNodesChange={onNodesChange}
@@ -471,46 +502,65 @@ export default function TaskFlowchart() {
                         onNodeDragStop={onNodeDragStop}
                         onConnect={onConnect}
                         onNodeClick={onNodeClick}
+                        onPaneClick={handlePaneClick}
                         fitView
-                    />
+                        snapToGrid={true}
+                        snapGrid={[16, 16]}
+                    >
+                        <Background variant={BackgroundVariant.Lines} gap={16} color="rgba(156, 156, 205, 0.13)" />
+                    </ReactFlow>
                 </div>
 
                 {/* ── Floating Action Panel ── */}
                 <div className="flowchart_float_panel">
-                    {/* Add Task button (always visible when permitted) */}
-                    {canCreateGoal && (
+                    <div className="flowchart_float_card">
+                        {/* Add Task button */}
+                        {canCreateGoal && (
+                            <button
+                                className="flowchart_float_btn flowchart_float_btn--primary flowchart_float_btn--large"
+                                onClick={() => {
+                                    setSelectedTask(null)
+                                    setIsCreatingGoal(true)
+                                    setShowCreateModal(true)
+                                }}
+                                title="Añadir Tarea"
+                            >
+                                <MdAdd size={20} />
+                                <span>Añadir Tarea</span>
+                            </button>
+                        )}
+
+                        {/* Add Subtask button — shows selected task name when active */}
                         <button
-                            className="flowchart_float_btn flowchart_float_btn--primary"
-                            onClick={() => {
-                                setSelectedTask(null)
-                                setIsCreatingGoal(true)
-                                setShowCreateModal(true)
-                            }}
-                            title="Añadir Tarea"
+                            className={`flowchart_float_btn flowchart_float_btn--secondary${!selectedTask ? ' flowchart_float_btn--disabled' : ''}`}
+                            onClick={() => selectedTask && setShowCreateModal(true)}
+                            disabled={!selectedTask}
+                            title={selectedTask ? `Añadir subtarea a "${selectedTask.title}"` : 'Selecciona una tarea primero'}
                         >
-                            <MdAdd size={20} />
-                            <span>Añadir Tarea</span>
+                            <MdAdd size={18} />
+                            <span className="flowchart_subtask_btn_label">
+                                Añadir Subtarea
+                                {selectedTask && (
+                                    <span className="flowchart_subtask_btn_task">{selectedTask.title}</span>
+                                )}
+                            </span>
                         </button>
-                    )}
 
-                    {/* Selected task label */}
-                    <div className={`flowchart_float_selected${selectedTask ? ' flowchart_float_selected--active' : ''}`}>
-                        {selectedTask
-                            ? <><span className="flowchart_float_selected_dot" />{selectedTask.title}</>
-                            : <em>Ninguna tarea seleccionada</em>
-                        }
+                        {/* Show completed toggle */}
+                        <label className="flowchart_toggle_row" title="Mostrar tareas completadas">
+                            <span className="flowchart_toggle_label">
+                                <MdCheckCircleOutline size={15} />
+                                Mostrar completadas
+                            </span>
+                            <span className={`flowchart_toggle_switch${showCompleted ? ' flowchart_toggle_switch--on' : ''}`}
+                                role="switch"
+                                aria-checked={showCompleted}
+                                onClick={(e) => { e.preventDefault(); setShowCompleted(v => !v) }}
+                            >
+                                <span className="flowchart_toggle_thumb" />
+                            </span>
+                        </label>
                     </div>
-
-                    {/* Add Prerequisite button */}
-                    <button
-                        className={`flowchart_float_btn flowchart_float_btn--secondary${!selectedTask ? ' flowchart_float_btn--disabled' : ''}`}
-                        onClick={() => selectedTask && setShowCreateModal(true)}
-                        disabled={!selectedTask}
-                        title={selectedTask ? 'Añadir Subtarea' : 'Selecciona una tarea primero'}
-                    >
-                        <MdAdd size={20} />
-                        <span>Añadir Subtarea</span>
-                    </button>
                 </div>
 
                 {/* Create Task Modal */}
@@ -559,49 +609,21 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
     const [teamId, setTeamId] = useState("")
     const [assignedTo, setAssignedTo] = useState("")
     const [participantIds, setParticipantIds] = useState([])
-    const [teamProfiles, setTeamProfiles] = useState(null) // null = no team selected yet
-    const [loadingTeamProfiles, setLoadingTeamProfiles] = useState(false)
     const [id_usuario, setIdUsuario] = useState(null)
 
-    // Load current user id from native Supabase session
     useEffect(() => {
         createClient().auth.getSession().then(({ data: { session } }) => {
             if (session?.user?.id) setIdUsuario(session.user.id)
         })
     }, [])
 
-    // Profiles list to display: filter by team when a team is selected
-    const filteredProfiles = teamProfiles !== null ? teamProfiles : (profiles || [])
-
-    // Set default assignedTo to current user if available
     useEffect(() => {
-        if (id_usuario) {
-            setAssignedTo(id_usuario)
-        }
+        if (id_usuario) setAssignedTo(id_usuario)
     }, [id_usuario])
-
-    // When team changes, load that team's members and reset user selections
-    async function handleTeamChange(newTeamId) {
-        setTeamId(newTeamId)
-        // Reset selections to avoid having values from a different team
-        setAssignedTo("")
-        setParticipantIds([])
-
-        if (!newTeamId) {
-            setTeamProfiles(null)
-            return
-        }
-
-        setLoadingTeamProfiles(true)
-        const { profiles: members } = await getTeamMembers(newTeamId)
-        setTeamProfiles(members)
-        setLoadingTeamProfiles(false)
-    }
 
     async function handleSubmit(e) {
         e.preventDefault()
 
-        // 1. Create Task
         const { task, error } = await createTask({
             title,
             team_id: teamId || null,
@@ -621,7 +643,6 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
             return
         }
 
-        // 2. Add Participants (tasks_profiles)
         if (participantIds.length > 0) {
             const { error: profileError } = await addProfilesToTask(task.id, participantIds)
             if (profileError) {
@@ -630,14 +651,12 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
             }
         }
 
-        // Enrich task with profile data so avatars render immediately
-        const allProfiles = filteredProfiles.length > 0 ? filteredProfiles : (profiles || [])
-        const assignedProfile = assignedTo ? allProfiles.find(p => p.id === assignedTo) : null
+        const assignedProfile = assignedTo ? (profiles || []).find(p => p.id === assignedTo) : null
         task.assigned_to_profile = assignedProfile
             ? { id: assignedProfile.id, full_name: assignedProfile.full_name, username: assignedProfile.username, avatar_url: assignedProfile.avatar_url }
             : null
         task.tasks_profiles = participantIds.map(pid => {
-            const prof = allProfiles.find(p => p.id === pid)
+            const prof = (profiles || []).find(p => p.id === pid)
             return prof
                 ? { id_profile: pid, profiles: { id: prof.id, full_name: prof.full_name, username: prof.username, avatar_url: prof.avatar_url } }
                 : { id_profile: pid, profiles: null }
@@ -668,7 +687,7 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
                         <Select
                             value={teamId}
                             label="Equipo"
-                            onChange={(e) => handleTeamChange(e.target.value)}
+                            onChange={(e) => setTeamId(e.target.value)}
                         >
                             <MenuItem value=""><em>Sin equipo</em></MenuItem>
                             {teams.map((t) => (
@@ -683,10 +702,9 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
                             value={assignedTo}
                             label="Asignado a"
                             onChange={(e) => setAssignedTo(e.target.value)}
-                            disabled={loadingTeamProfiles}
                         >
                             <MenuItem value=""><em>Sin asignar</em></MenuItem>
-                            {filteredProfiles.map((p) => (
+                            {(profiles || []).map((p) => (
                                 <MenuItem key={p.id} value={p.id}>{p.full_name || p.username || "Usuario"}</MenuItem>
                             ))}
                         </Select>
@@ -699,33 +717,23 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
                             multiple
                             value={participantIds}
                             onChange={(e) => {
-                                const { target: { value } } = e;
-                                setParticipantIds(
-                                    typeof value === 'string' ? value.split(',') : value,
-                                );
+                                const { target: { value } } = e
+                                setParticipantIds(typeof value === 'string' ? value.split(',') : value)
                             }}
                             input={<OutlinedInput label="Participantes" />}
                             renderValue={(selected) => (
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                     {selected.map((value) => {
-                                        const profile = filteredProfiles.find(p => p.id === value)
+                                        const profile = (profiles || []).find(p => p.id === value)
                                         return (
                                             <Chip key={value} label={profile?.full_name || profile?.username || "Usuario"} />
                                         )
                                     })}
                                 </Box>
                             )}
-                            disabled={loadingTeamProfiles}
-                            MenuProps={{
-                                PaperProps: {
-                                    style: {
-                                        maxHeight: 224,
-                                        width: 250,
-                                    },
-                                },
-                            }}
+                            MenuProps={{ PaperProps: { style: { maxHeight: 224, width: 250 } } }}
                         >
-                            {filteredProfiles.map((p) => (
+                            {(profiles || []).map((p) => (
                                 <MenuItem key={p.id} value={p.id}>
                                     {p.full_name || p.username || "Usuario"}
                                 </MenuItem>
@@ -735,12 +743,8 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
 
                 </DialogContent>
                 <DialogActions style={{ padding: 24 }}>
-                    <Button onClick={onClose} variant="outlined" color="inherit">
-                        Cancelar
-                    </Button>
-                    <Button type="submit" variant="contained" color="primary" disabled={loadingTeamProfiles}>
-                        Crear
-                    </Button>
+                    <Button onClick={onClose} variant="outlined" color="inherit">Cancelar</Button>
+                    <Button type="submit" variant="contained" color="primary">Crear</Button>
                 </DialogActions>
             </form>
         </Dialog>
@@ -759,8 +763,6 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
         (task.tasks_profiles || []).map(tp => tp.id_profile)
     )
     const [saving, setSaving] = useState(false)
-    const [teamProfiles, setTeamProfiles] = useState(null) // null = use all profiles
-    const [loadingTeamProfiles, setLoadingTeamProfiles] = useState(false)
     const [id_usuario, setIdUsuario] = useState(null)
 
     useEffect(() => {
@@ -769,42 +771,10 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
         })
     }, [])
 
-    // Load team members for the task's current team on mount
-    useEffect(() => {
-        if (task.team_id) {
-            setLoadingTeamProfiles(true)
-            getTeamMembers(task.team_id).then(({ profiles: members }) => {
-                setTeamProfiles(members)
-                setLoadingTeamProfiles(false)
-            })
-        }
-    }, [])
-
-    // Profiles list to display: filtered by team when a team is selected
-    const filteredProfiles = teamProfiles !== null ? teamProfiles : (profiles || [])
-
-    // When team changes, load that team's members and reset user-related selections
-    async function handleTeamChange(newTeamId) {
-        setTeamId(newTeamId)
-        setAssignedTo("")
-        setParticipantIds([])
-
-        if (!newTeamId) {
-            setTeamProfiles(null)
-            return
-        }
-
-        setLoadingTeamProfiles(true)
-        const { profiles: members } = await getTeamMembers(newTeamId)
-        setTeamProfiles(members)
-        setLoadingTeamProfiles(false)
-    }
-
     async function handleSubmit(e) {
         e.preventDefault()
         setSaving(true)
 
-        // 1. Update task fields
         const { task: updated, error } = await updateTask(task.id, {
             title,
             description: description || null,
@@ -834,16 +804,14 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
             return
         }
 
-        // 2. Sync participants
         const { error: syncError } = await syncTaskProfiles(task.id, participantIds)
         if (syncError) {
             console.error("Error syncing participants:", syncError)
             alert("Tarea actualizada, pero hubo un error actualizando participantes.")
         }
 
-        // Enrich updated task with participant profiles for immediate avatar rendering
         updated.tasks_profiles = participantIds.map(pid => {
-            const prof = filteredProfiles.find(p => p.id === pid) || (profiles || []).find(p => p.id === pid)
+            const prof = (profiles || []).find(p => p.id === pid)
             return prof
                 ? { id_profile: pid, profiles: { id: prof.id, full_name: prof.full_name, username: prof.username, avatar_url: prof.avatar_url } }
                 : { id_profile: pid, profiles: null }
@@ -894,7 +862,7 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
                     </FormControl>
                     <FormControl fullWidth>
                         <InputLabel>Equipo</InputLabel>
-                        <Select value={teamId} label="Equipo" onChange={(e) => handleTeamChange(e.target.value)}>
+                        <Select value={teamId} label="Equipo" onChange={(e) => setTeamId(e.target.value)}>
                             <MenuItem value=""><em>Sin equipo</em></MenuItem>
                             {teams.map((t) => (
                                 <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
@@ -903,14 +871,9 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
                     </FormControl>
                     <FormControl fullWidth>
                         <InputLabel>Asignado a</InputLabel>
-                        <Select
-                            value={assignedTo}
-                            label="Asignado a"
-                            onChange={(e) => setAssignedTo(e.target.value)}
-                            disabled={loadingTeamProfiles}
-                        >
+                        <Select value={assignedTo} label="Asignado a" onChange={(e) => setAssignedTo(e.target.value)}>
                             <MenuItem value=""><em>Sin asignar</em></MenuItem>
-                            {filteredProfiles.map((p) => (
+                            {(profiles || []).map((p) => (
                                 <MenuItem key={p.id} value={p.id}>{p.full_name || p.username || "Usuario"}</MenuItem>
                             ))}
                         </Select>
@@ -922,33 +885,23 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
                             multiple
                             value={participantIds}
                             onChange={(e) => {
-                                const { target: { value } } = e;
-                                setParticipantIds(
-                                    typeof value === 'string' ? value.split(',') : value,
-                                );
+                                const { target: { value } } = e
+                                setParticipantIds(typeof value === 'string' ? value.split(',') : value)
                             }}
                             input={<OutlinedInput label="Participantes" />}
                             renderValue={(selected) => (
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                     {selected.map((value) => {
-                                        const profile = filteredProfiles.find(p => p.id === value) || (profiles || []).find(p => p.id === value)
+                                        const profile = (profiles || []).find(p => p.id === value)
                                         return (
                                             <Chip key={value} label={profile?.full_name || profile?.username || "Usuario"} />
                                         )
                                     })}
                                 </Box>
                             )}
-                            disabled={loadingTeamProfiles}
-                            MenuProps={{
-                                PaperProps: {
-                                    style: {
-                                        maxHeight: 224,
-                                        width: 250,
-                                    },
-                                },
-                            }}
+                            MenuProps={{ PaperProps: { style: { maxHeight: 224, width: 250 } } }}
                         >
-                            {filteredProfiles.map((p) => (
+                            {(profiles || []).map((p) => (
                                 <MenuItem key={p.id} value={p.id}>
                                     {p.full_name || p.username || "Usuario"}
                                 </MenuItem>
@@ -965,9 +918,7 @@ function EditTaskModal({ task, teams, profiles, onClose, onUpdated }) {
                     />
                 </DialogContent>
                 <DialogActions style={{ padding: 24 }}>
-                    <Button onClick={onClose} variant="outlined" color="inherit" disabled={saving}>
-                        Cancelar
-                    </Button>
+                    <Button onClick={onClose} variant="outlined" color="inherit" disabled={saving}>Cancelar</Button>
                     <Button type="submit" variant="contained" color="primary" disabled={saving}>
                         {saving ? "Guardando..." : "Guardar"}
                     </Button>

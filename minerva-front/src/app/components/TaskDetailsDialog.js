@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { getTaskProgresos, createProgreso, completeTask, canCompleteTask } from "../utils/supa"
-import { MdClose, MdAdd, MdCheckCircle } from "react-icons/md"
+import { MdClose, MdAdd, MdCheckCircle, MdDoneAll } from "react-icons/md"
 import { Button, Dialog, DialogContent, DialogActions, CircularProgress } from "@mui/material"
 
 const MIN_TITULO_LENGTH = 3
@@ -119,13 +119,19 @@ export default function TaskDetailsDialog({ task, onClose, teams, userId, onTask
             PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}
         >
             {/* ── Header ── */}
-            <div className="td_header">
+            <div className={`td_header${isCompleted ? ' td_header--completed' : ''}`}>
                 <div className="td_header_inner">
                     <div className="td_title">{task.title}</div>
                     <button className="td_close_btn" onClick={onClose} title="Cerrar">
                         <MdClose size={18} />
                     </button>
                 </div>
+                {isCompleted && (
+                    <div className="td_completed_banner">
+                        <MdDoneAll size={16} />
+                        <span>Tarea completada</span>
+                    </div>
+                )}
             </div>
 
             <DialogContent style={{ padding: "20px 24px 8px", display: "flex", flexDirection: "column", gap: 20 }}>

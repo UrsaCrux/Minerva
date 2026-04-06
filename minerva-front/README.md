@@ -24,6 +24,10 @@ A sophisticated view mapping dependencies across system tasks.
 
 *To use:* Tasks present themselves based on the completion of subtask hierarchies. Interactive nodes handle team assignments (Responsable vs. Participante) and display real-time user avatars on node progression. Statuses leverage our "No-line" `primary` glowing aesthetics.
 
+- **Select / Deselect:** Click a node to select it (glowing outline). Click empty canvas space to deselect.
+- **Expand subtasks:** Clicking a selected node fetches and renders its prerequisite subtasks below it.
+- **Mostrar completadas toggle:** A pill toggle in the floating action panel controls visibility of completed tasks. OFF by default to keep the flowchart uncluttered. When ON, completed nodes appear as translucent ghosts (low opacity + desaturated) so past progress is visible without overwhelming active work.
+
 ### 4. Events Calendar (Eventos)
 A massive, orbital timeline and event planner spanning the organization.
 ![Eventos View](https://github.com/UrsaCrux/Minerva/blob/feature/progresos/minerva-front/public/screenshots/eventos_page_real_1775338683775.png?raw=true)
@@ -39,13 +43,16 @@ From the **Dashboard → Tus Asignaciones** panel, click "Ver detalles" on any t
 *To use:* Inside the dialog, click the **"Añadir"** button next to "Historial de Progreso" to reveal the inline form. Fill in a title and optionally a description, then click **"Guardar Progreso"**. Entries appear in reverse chronological order with author avatars.
 
 ### 6. Task Completion
-The Task Details dialog also features a **"Completar Tarea"** button in the footer.
+The Task Details dialog features a **"Completar Tarea"** button in the footer.
 
 *How it works:*
-- The button is only enabled when **all subtasks** (tasks whose `desbloquea` points to this task) are marked as `completado`.
+- The button is only enabled when **all subtasks** are marked `completado`.
 - If subtasks are incomplete, the button appears disabled with reduced opacity.
-- Server-side enforcement via a Postgres trigger prevents bypassing this rule from any client.
-- Completed tasks are automatically hidden from the "Tus Asignaciones" list.
+- Server-side enforcement via a Postgres trigger prevents bypassing this rule.
+- Upon completion, the task is **immediately deselected and hidden** from the flowchart (toggle must be ON to see it again).
+- Completed tasks render as **ghosts** when shown — 38% opacity, desaturated — clearly communicating past vs. active work.
+- The Task Details dialog header changes to a **teal gradient** with a "Tarea completada" badge when viewing a completed task.
+- The hover tooltip for completed nodes also shows a teal-tinted background and a completion banner.
 
 ### 7. User Directory (Usuarios)
 Global directory for team tracking and operational assignment.
