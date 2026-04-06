@@ -33,13 +33,13 @@ export default function Home() {
       </h1>
 
       <div className="home_grid" style={{ flex: 1, minHeight: 0 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 20, overflow: 'hidden' }}>
           <AssignedTasksCol userId={userId} teams={teams} />
+          <DashboardAnnouncements />
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 20, overflow: 'hidden' }}>
           <DashboardAsistencia userId={userId} />
-          <DashboardAnnouncements />
           <DashboardUpcomingEvents userId={userId} />
         </div>
 
