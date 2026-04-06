@@ -435,7 +435,7 @@ export async function createEvento(eventoData, userIds = []) {
         .insert(eventoData)
         .select()
         .single()
-    
+
     if (eventoError || !evento) return { evento: null, error: eventoError }
 
     if (userIds.length > 0) {
@@ -466,7 +466,7 @@ export async function updateEvento(id_evento, eventoData, userIds = []) {
         .eq("id_evento", id_evento)
         .select()
         .single()
-    
+
     if (eventoError) return { evento: null, error: eventoError }
 
     // Sync users
@@ -528,9 +528,9 @@ export async function getEventUsers(id_evento) {
     const justificados = data.filter(d => d.asistencia === 2).map(d => d.profiles)
     const nr = data.filter(d => d.asistencia === 0).map(d => d.profiles)
 
-    return { 
-        data: { confirmados, justificados, nr }, 
-        error: null 
+    return {
+        data: { confirmados, justificados, nr },
+        error: null
     }
 }
 
@@ -561,11 +561,11 @@ export async function enviarJustificacion(id_evento, id_usuario, motivo, archivo
     for (const file of archivos) {
         const fileExt = file.name.split(".").pop()
         const fileName = `${id_evento}/${id_usuario}-${Math.random()}.${fileExt}`
-        
+
         const { error: uploadError } = await supaClient.storage
             .from("justificaciones")
             .upload(fileName, file)
-        
+
         if (!uploadError) {
             const { data: { publicUrl } } = supaClient.storage
                 .from("justificaciones")
@@ -576,14 +576,14 @@ export async function enviarJustificacion(id_evento, id_usuario, motivo, archivo
 
     const { error } = await supaClient
         .from("eventos_usuarios")
-        .update({ 
-            asistencia: 2, 
+        .update({
+            asistencia: 2,
             motivo_justificacion: motivo,
             archivos: uploadedUrls
         })
         .eq("id_evento", id_evento)
         .eq("id_usuario", id_usuario)
-        
+
     return { error }
 }
 

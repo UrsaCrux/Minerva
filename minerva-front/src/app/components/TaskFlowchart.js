@@ -7,7 +7,7 @@ import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Handle, Positio
 import '@xyflow/react/dist/style.css';
 import '../tareas.css';
 import { resolveCollisions } from './resolveCollisions';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Chip, OutlinedInput, Box, CircularProgress } from "@mui/material"
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Chip, OutlinedInput, Box, CircularProgress, Snackbar, Alert } from "@mui/material"
 import TaskDetailsDialog from "./TaskDetailsDialog"
 
 // Hardcoded colors for teams mapped to vibrant Celestial Navigator Theme colors
@@ -257,6 +257,7 @@ export default function TaskFlowchart() {
     const [showCompleted, setShowCompleted] = useState(false)
     // Track which nodes currently have their children expanded
     const [expandedNodes, setExpandedNodes] = useState(new Set())
+    const [toast, setToast] = useState({ open: false, message: "", severity: "success" })
 
     // Load initial data
     useEffect(() => {
@@ -571,18 +572,19 @@ export default function TaskFlowchart() {
                             setShowCreateModal(false)
                             setIsCreatingGoal(false)
                         }}
-                        onCreated={(newTask) => {
-                            setTasks(prev => [...prev, newTask])
+                        onCreated={async (newTask) => {
                             setShowCreateModal(false)
                             setIsCreatingGoal(false)
+                            setToast({ open: true, message: "Tarea creada exitosamente", severity: "success" })
 
                             if (isCreatingGoal) {
-                                const topLevelNodes = nodes.filter(n => n.position.y === 0)
-                                const newX = topLevelNodes.length * 250
-                                setNodes(prev => [...prev, buildNode(newTask, { x: newX, y: 0 })])
+                                setExpandedNodes(new Set())
+                                setEdges([])
+                                await loadInitialData()
                                 return
                             }
 
+                            setTasks(prev => [...prev, newTask])
                             const targetNode = nodes.find(n => n.id === selectedTask.id.toString())
                             const targetPos = targetNode ? targetNode.position : { x: 0, y: 0 }
                             setNodes(prev => [...prev, buildNode(newTask, { x: targetPos.x, y: targetPos.y + 150 })])
@@ -599,6 +601,17 @@ export default function TaskFlowchart() {
                         profiles={profiles}
                     />
                 )}
+
+                <Snackbar 
+                    open={toast.open} 
+                    autoHideDuration={4000} 
+                    onClose={() => setToast({ ...toast, open: false })}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                >
+                    <Alert onClose={() => setToast({ ...toast, open: false })} severity={toast.severity} variant="filled" sx={{ width: "100%" }}>
+                        {toast.message}
+                    </Alert>
+                </Snackbar>
             </div>
         </div>
     )
@@ -609,6 +622,7 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
     const [teamId, setTeamId] = useState("")
     const [assignedTo, setAssignedTo] = useState("")
     const [participantIds, setParticipantIds] = useState([])
+    const [priority, setPriority] = useState("")
     const [id_usuario, setIdUsuario] = useState(null)
 
     useEffect(() => {
@@ -630,7 +644,8 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
             desbloquea: unlockedTask ? unlockedTask.id : null,
             assigned_to: assignedTo || null,
             created_by: id_usuario,
-            status: "pendiente"
+            status: "pendiente",
+            priority: priority === "" ? null : Number(priority)
         })
 
         if (error) {
@@ -681,6 +696,20 @@ function CreateTaskModal({ unlockedTask, onClose, onCreated, teams, profiles }) 
                         onChange={(e) => setTitle(e.target.value)}
                         required
                     />
+
+                    <FormControl fullWidth>
+                        <InputLabel>Prioridad</InputLabel>
+                        <Select
+                            value={priority}
+                            label="Prioridad"
+                            onChange={(e) => setPriority(e.target.value)}
+                        >
+                            <MenuItem value=""><em>Sin prioridad</em></MenuItem>
+                            <MenuItem value="1">Alta</MenuItem>
+                            <MenuItem value="2">Media</MenuItem>
+                            <MenuItem value="3">Baja</MenuItem>
+                        </Select>
+                    </FormControl>
 
                     <FormControl fullWidth>
                         <InputLabel>Equipo</InputLabel>

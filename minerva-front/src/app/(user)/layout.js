@@ -31,7 +31,6 @@ export default function UserLayout({ children }) {
     async function checkPermisos() {
       const canEditUsers = await hasPermiso(1)
       const canEditEventos = await hasPermiso(2)
-
       if (canEditEventos) {
         setNavItems(prev => {
           if (prev.some(item => item.href === "/eventos")) return prev
