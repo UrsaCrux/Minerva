@@ -6,6 +6,11 @@
 - [x] add the button para terminar una tarea
 - [x] add the logic for a task to not show if its completed and only can be comleted if all the subtasks are comleted
 - [x] make a complete documentation of the page and how to use it in README.md
+- [x] completed tasks hidden by default in flowchart; toggle "Mostrar completadas" to view as ghosts
+- [x] clicking empty canvas deselects the active task
+- [x] completed task dialog header shows teal gradient + "Tarea completada" banner
+- [x] completed task tooltip shows teal tint + completion banner
+
 
 ## Manejar las finanzas del club
 - [ ] Implementar botón de Mercado Pago

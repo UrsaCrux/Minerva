@@ -104,20 +104,6 @@ export async function deletePermisoUsuario(userId, permiso) {
 }
 
 /**
- * Fetches profiles of all members belonging to a specific team.
- * @param {number} teamId
- * @returns {Promise<{profiles: object[], error: object|null}>}
- */
-export async function getTeamMembers(teamId) {
-    const { data, error } = await supaClient
-        .from("team_members")
-        .select("user_id, role, profiles:user_id(id, full_name, username, avatar_url)")
-        .eq("team_id", teamId)
-    const profiles = (data ?? []).map(row => row.profiles).filter(Boolean)
-    return { profiles, error: error ?? null }
-}
-
-/**
  * Fetches all tasks.
  */
 export async function getAllTasks() {
