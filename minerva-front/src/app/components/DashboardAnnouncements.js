@@ -136,7 +136,7 @@ export default function DashboardAnnouncements() {
             if (isMounted && !error) {
                 setAnuncios(anuncios || [])
             }
-            const hasAdmin = await hasPermiso(1)
+            const hasAdmin = await hasPermiso(5)
             if (isMounted) setCanCreate(hasAdmin)
 
             if (isMounted) setLoading(false)

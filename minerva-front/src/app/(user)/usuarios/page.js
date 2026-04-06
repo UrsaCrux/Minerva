@@ -19,6 +19,7 @@ const PERMISOS_MAP = {
     2: "Crear eventos en calendario",
     3: "Control sobre tareas",
     4: "Gestionar informes",
+    5: "Crear anuncios",
 }
 
 export default function UsuariosPage() {
@@ -204,10 +205,10 @@ export default function UsuariosPage() {
                 </Button>
             </div>
 
-            <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
+            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 'calc(100vh - 180px)', overflow: 'auto' }}>
+                <Table size="small" stickyHeader>
                     <TableHead>
-                        <TableRow>
+                        <TableRow sx={{ '& th': { backgroundColor: 'var(--surface)' } }}>
                             <TableCell><strong>Nombre completo</strong></TableCell>
                             <TableCell><strong>Username</strong></TableCell>
                             <TableCell><strong>Email</strong></TableCell>
