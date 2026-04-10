@@ -60,6 +60,21 @@ export async function hasPermiso(permiso) {
 }
 
 /**
+ * Fetches all permission IDs for the current user in a single query.
+ * @returns {Promise<{permisos: Set<number>, error: object|null}>}
+ */
+export async function getUserPermisosAll() {
+    const { data: { session } } = await supaClient.auth.getSession()
+    const userId = session?.user?.id
+    if (!userId) return { permisos: new Set(), error: null }
+    const { data, error } = await supaClient
+        .from("permisos_usuarios")
+        .select("permiso")
+        .eq("id_usuario", userId)
+    return { permisos: new Set((data || []).map(row => row.permiso)), error }
+}
+
+/**
  * Fetches all profiles.
  */
 export async function getAllProfiles() {

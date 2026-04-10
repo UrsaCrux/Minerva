@@ -73,6 +73,7 @@ Navigate to `/informes` from the sidebar to view all meeting reports.
 - **Styling:** Custom CSS based on the Galactic Oversight design specs (`dashboard.css`, `tareas.css`, etc.)
 - **Database / Auth:** [Supabase](https://supabase.com/) integrating centralized hooks in `supa.js`.
 - **UI Components:** Interactive overlays and visual telemetry via full-glass React components.
+- **Performance:** Bulk permission checks via `getUserPermisosAll()` (single query instead of N sequential calls). Dashboard page lifts shared data (eventos, teams, session) into a single `Promise.all` and distributes to child components via props, eliminating duplicate Supabase calls.
 
 ---
 

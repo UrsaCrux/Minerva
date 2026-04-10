@@ -8,10 +8,9 @@ import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import '../tareas.css';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Box, Button, Modal, Typography } from '@mui/material';
 import FormInasistencia from './FormInasistencia';
-import { createClient } from '../utils/client';
 import { confirmarAsistencia, getEventos } from '../utils/supa';
 import dayjs from 'dayjs';
 import { MdClose, MdLocationOn, MdAccessTime, MdCheckCircle, MdCancel } from 'react-icons/md';
@@ -29,7 +28,36 @@ const modalBoxStyle = {
     p: 4,
 };
 
-export default function CalendarView() {
+/**
+ * Maps raw evento rows into FullCalendar event objects.
+ */
+function mapEventosToCalendar(eventos, userProfileId) {
+    return (eventos || []).map(ev => {
+        const hInicio = dayjs(ev.inicio).format('HH:mm')
+        const hFinal = ev.final ? dayjs(ev.final).format('HH:mm') : ''
+        const horaD = ev.final ? `${hInicio} - ${hFinal}` : hInicio
+
+        const myRecord = (ev.eventos_usuarios ?? []).find(u => u.id_usuario === userProfileId)
+        const myAsistencia = myRecord ? myRecord.asistencia : 0
+
+        return {
+            title: ev.titulo,
+            id_evento: ev.id_evento,
+            start: ev.inicio,
+            end: ev.final || ev.inicio,
+            color: ev.obligatorio ? "#ef4444" : "#4f46e5",
+            extendedProps: {
+                description: ev.descripcion,
+                lugar: ev.lugar,
+                horaDisplay: horaD,
+                asistencia: myAsistencia,
+                obligatorio: ev.obligatorio,
+            }
+        }
+    })
+}
+
+export default function CalendarView({ userId, eventos: eventosProp }) {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [popoverPosition, setPopoverPosition] = useState({ x: 0, top: 0, bottom: 'auto' })
     const popoverRef = useRef(null)
@@ -43,58 +71,18 @@ export default function CalendarView() {
     const [obligatorio, setObligatorio] = useState(false)
 
     const [openM, setOpenM] = useState(false)
-    const [events, setEvents] = useState([])
+    // Local override: null means "use prop", non-null means "use refreshed data"
+    const [localEventos, setLocalEventos] = useState(null)
     const [loading, setLoading] = useState(false)
-    const [userId, setUserId] = useState(null)
 
-    useEffect(() => {
-        createClient().auth.getSession().then(({ data: { session } }) => {
-            if (session?.user?.id) setUserId(session.user.id)
-        })
-    }, [])
+    const activeEventos = localEventos ?? eventosProp
+    const events = useMemo(() => mapEventosToCalendar(activeEventos, userId), [activeEventos, userId])
 
-    const fetchEvents = async () => {
-        const userProfileId = userId;
-
-        const { eventos, error } = await getEventos();
-        if (error || !eventos) {
-            console.error(error)
-            setLoading(false)
-            return;
-        }
-
-        const mappedEvents = eventos.map(ev => {
-            const hInicio = dayjs(ev.inicio).format('HH:mm');
-            const hFinal = ev.final ? dayjs(ev.final).format('HH:mm') : '';
-            const horaD = ev.final ? `${hInicio} - ${hFinal}` : hInicio;
-
-            const myRecord = (ev.eventos_usuarios ?? []).find(u => u.id_usuario === userProfileId);
-            const myAsistencia = myRecord ? myRecord.asistencia : 0;
-
-            return {
-                title: ev.titulo,
-                id_evento: ev.id_evento,
-                start: ev.inicio,
-                end: ev.final || ev.inicio,
-                color: ev.obligatorio ? "#ef4444" : "#4f46e5",
-                extendedProps: {
-                    description: ev.descripcion,
-                    lugar: ev.lugar,
-                    horaDisplay: horaD,
-                    asistencia: myAsistencia,
-                    obligatorio: ev.obligatorio,
-                }
-            };
-        });
-
-        setEvents(mappedEvents)
-        setLoading(false)
+    // Re-fetch only after attendance mutations (confirm / justify)
+    async function refreshAfterMutation() {
+        const { eventos, error } = await getEventos()
+        if (!error && eventos) setLocalEventos(eventos)
     }
-
-    useEffect(() => {
-        fetchEvents()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userId])
 
     // Close popover when clicking outside
     useEffect(() => {
@@ -109,16 +97,15 @@ export default function CalendarView() {
     }, [popoverOpen]);
 
     const handleConfirmar = async () => {
-        const userProfileId = userId;
-        if (!userProfileId) return alert("Error de sesión");
+        if (!userId) return alert("Error de sesión")
 
-        const { error } = await confirmarAsistencia(eventId, userProfileId);
+        const { error } = await confirmarAsistencia(eventId, userId)
         if (error) {
-            console.error("Error confirmando", error);
-            alert("Error al Confirmar Asistencia");
+            console.error("Error confirmando", error)
+            alert("Error al Confirmar Asistencia")
         } else {
-            setAsistencia(1);
-            fetchEvents();
+            setAsistencia(1)
+            refreshAfterMutation()
         }
     }
 
@@ -159,8 +146,8 @@ export default function CalendarView() {
                         eventId={eventId}
                         handleClose={handleClose}
                         onSuccess={() => {
-                            setAsistencia(2);
-                            fetchEvents();
+                            setAsistencia(2)
+                            refreshAfterMutation()
                         }}
                     />
                 </Box>

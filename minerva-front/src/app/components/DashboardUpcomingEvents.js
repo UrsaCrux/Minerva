@@ -1,42 +1,28 @@
 "use client"
-import { useState, useEffect } from "react"
-import { getEventos } from "../utils/supa"
+import { useMemo } from "react"
 
-export default function DashboardUpcomingEvents({ userId }) {
-    const [eventos, setEventos] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        let isMounted = true
-        async function load() {
-            setLoading(true)
-            const { eventos, error } = await getEventos()
-            if (isMounted && !error) {
-                const now = new Date()
-                const future = (eventos || []).filter(e => {
-                    if (e.fin) {
-                        return new Date(e.fin) >= now
-                    }
-                    return new Date(e.inicio) >= now
-                })
-                setEventos(future.slice(0, 5))
-            }
-            if (isMounted) setLoading(false)
-        }
-        load()
-        return () => { isMounted = false }
-    }, [])
+export default function DashboardUpcomingEvents({ userId, eventos }) {
+    const upcomingEventos = useMemo(() => {
+        if (!eventos || eventos.length === 0) return []
+        const now = new Date()
+        return eventos
+            .filter(e => {
+                if (e.fin) return new Date(e.fin) >= now
+                return new Date(e.inicio) >= now
+            })
+            .slice(0, 5)
+    }, [eventos])
 
     return (
         <div className="home_card db_col_eventos">
             <h2 className="db_card_title" style={{ marginBottom: 12 }}>Próximos Eventos</h2>
             <div className="db_scroll_list">
-                {loading ? (
+                {!eventos ? (
                     <p style={{ color: "var(--on-surface-variant)", fontSize: "0.9rem" }}>Cargando eventos...</p>
-                ) : eventos.length === 0 ? (
+                ) : upcomingEventos.length === 0 ? (
                     <p style={{ color: "var(--on-surface-variant)", fontSize: "0.9rem" }}>No hay eventos próximos.</p>
                 ) : (
-                    eventos.map(evento => {
+                    upcomingEventos.map(evento => {
                         const participation = evento.eventos_usuarios?.find(eu => eu.id_usuario === userId)
                         
                         let statusText = "No inscrito"
@@ -72,4 +58,3 @@ export default function DashboardUpcomingEvents({ userId }) {
         </div>
     )
 }
-
