@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { getTeams } from "../utils/supa"
+import { getTeams, getEventos } from "../utils/supa"
 import { createClient } from "../utils/client"
 import CalendarView from "@/app/components/CalendarView"
 import AssignedTasksCol from "@/app/components/AssignedTasksCol"
@@ -11,18 +11,24 @@ import DashboardAsistencia from "@/app/components/DashboardAsistencia"
 export default function Home() {
   const [userId, setUserId] = useState(null)
   const [teams, setTeams] = useState([])
+  const [eventos, setEventos] = useState([])
 
   useEffect(() => {
     let isMounted = true
-    createClient().auth.getSession().then(({ data: { session } }) => {
-      if (isMounted && session?.user?.id) setUserId(session.user.id)
-    })
 
-    async function loadTeams() {
-      const { teams } = await getTeams()
-      if (isMounted) setTeams(teams)
+    async function loadDashboardData() {
+      const [sessionRes, teamsRes, eventosRes] = await Promise.all([
+        createClient().auth.getSession(),
+        getTeams(),
+        getEventos(),
+      ])
+      if (!isMounted) return
+      if (sessionRes.data.session?.user?.id) setUserId(sessionRes.data.session.user.id)
+      setTeams(teamsRes.teams)
+      setEventos(eventosRes.eventos)
     }
-    loadTeams()
+
+    loadDashboardData()
     return () => { isMounted = false }
   }, [])
 
@@ -40,13 +46,13 @@ export default function Home() {
         
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 20, overflow: 'hidden' }}>
           <DashboardAsistencia userId={userId} />
-          <DashboardUpcomingEvents userId={userId} />
+          <DashboardUpcomingEvents userId={userId} eventos={eventos} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <div className="home_card" style={{ flex: 1, padding: 0 }}>
             <div style={{ height: "100%" }}>
-              <CalendarView />
+              <CalendarView userId={userId} eventos={eventos} />
             </div>
           </div>
         </div>
@@ -54,4 +60,3 @@ export default function Home() {
     </div>
   )
 }
-
