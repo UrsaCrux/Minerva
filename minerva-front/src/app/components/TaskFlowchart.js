@@ -12,11 +12,11 @@ import TaskDetailsDialog from "./TaskDetailsDialog"
 
 // Hardcoded colors for teams mapped to vibrant Celestial Navigator Theme colors
 const TEAM_COLORS = {
-    1: "#9fa2ffff", // Primary (Soft Blue/Purple)
+    1: "#1f18daff", // Primary (Soft Blue/Purple)
     2: "#00bac4ff", // Secondary (Cyan)
-    3: "#eab2ffff", // Tertiary (Light Purple)
-    4: "#fd6f84ff", // Error (Salmon Red)
-    5: "#a9a8ccff", // On-surface variant (Lavender grey)
+    3: "#005e0cff", // Tertiary (Light Purple)
+    4: "#dd223eff", // Error (Salmon Red)
+    5: "#da6618ff", // On-surface variant (Lavender grey)
     default: "#454564" // Outline variant (Muted default)
 }
 
@@ -602,9 +602,27 @@ export default function TaskFlowchart() {
                     />
                 )}
 
-                <Snackbar 
-                    open={toast.open} 
-                    autoHideDuration={4000} 
+                {/* ── Team Color Legend ── */}
+                {teams.length > 0 && (
+                    <div className="flowchart_legend_panel">
+                        <div className="flowchart_legend_card">
+                            <div className="flowchart_legend_title">Comisiones</div>
+                            {teams.map(t => (
+                                <div key={t.id} className="flowchart_legend_item">
+                                    <span
+                                        className="flowchart_legend_swatch"
+                                        style={{ background: TEAM_COLORS[t.id] || TEAM_COLORS.default }}
+                                    />
+                                    <span className="flowchart_legend_label">{t.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <Snackbar
+                    open={toast.open}
+                    autoHideDuration={4000}
                     onClose={() => setToast({ ...toast, open: false })}
                     anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
                 >
