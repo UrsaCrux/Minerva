@@ -17,6 +17,9 @@ const inter = Inter({
 export const metadata = {
   title: "Minerva",
   description: "Intranet CCUC",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({ children }) {
