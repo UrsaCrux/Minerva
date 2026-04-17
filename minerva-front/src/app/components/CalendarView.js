@@ -7,11 +7,10 @@ import esLocale from '@fullcalendar/core/locales/es';
 import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import '../tareas.css';
-
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Box, Button, Modal, Typography } from '@mui/material';
 import FormInasistencia from './FormInasistencia';
-import { confirmarAsistencia, getEventos } from '../utils/supa';
+import { confirmarAsistencia, getEventos, isGoogleCalendarConnected, getGoogleAuthUrl, disconnectGoogleCalendar } from '../utils/supa';
 import dayjs from 'dayjs';
 import { MdClose, MdLocationOn, MdAccessTime, MdCheckCircle, MdCancel } from 'react-icons/md';
 
@@ -75,6 +74,10 @@ export default function CalendarView({ userId, eventos: eventosProp }) {
     const [localEventos, setLocalEventos] = useState(null)
     const [loading, setLoading] = useState(false)
 
+    // Google Calendar integration
+    const [gcalConnected, setGcalConnected] = useState(false)
+    const [gcalLoading, setGcalLoading] = useState(false)
+
     const activeEventos = localEventos ?? eventosProp
     const events = useMemo(() => mapEventosToCalendar(activeEventos, userId), [activeEventos, userId])
 
@@ -95,6 +98,23 @@ export default function CalendarView({ userId, eventos: eventosProp }) {
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, [popoverOpen]);
+
+    // Check Google Calendar connection status on mount
+    useEffect(() => {
+        isGoogleCalendarConnected().then(setGcalConnected)
+    }, [])
+
+    // Detect gcal=connected query param after OAuth redirect
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        const gcalStatus = params.get('gcal')
+        if (gcalStatus === 'connected') {
+            setGcalConnected(true)
+            // Clean URL without reload
+            const cleanUrl = window.location.pathname
+            window.history.replaceState({}, '', cleanUrl)
+        }
+    }, [])
 
     const handleConfirmar = async () => {
         if (!userId) return alert("Error de sesión")
@@ -135,6 +155,19 @@ export default function CalendarView({ userId, eventos: eventosProp }) {
         }
 
         return { x, top, bottom };
+    }
+
+    const handleConnectGoogle = async () => {
+        setGcalLoading(true)
+        const { url, error } = await getGoogleAuthUrl(window.location.href)
+        setGcalLoading(false)
+        if (error || !url) return alert('Error al conectar con Google')
+        window.location.href = url
+    }
+
+    const handleDisconnectGoogle = async () => {
+        const { error } = await disconnectGoogleCalendar()
+        if (!error) setGcalConnected(false)
     }
 
     return (
@@ -270,9 +303,16 @@ export default function CalendarView({ userId, eventos: eventosProp }) {
                 <FullCalendar
                     themeSystem='bootstrap5'
                     plugins={[dayGridPlugin, listPlugin, bootstrap5Plugin]}
+                    customButtons={{
+                        connectGcal: {
+                            icon: gcalConnected ? 'calendar-check-fill' : 'google',
+                            hint: gcalConnected ? 'Google Calendar Conectado (Click para desconectar)' : 'Conectar Google Calendar',
+                            click: gcalConnected ? handleDisconnectGoogle : handleConnectGoogle,
+                        }
+                    }}
                     headerToolbar={{
                         start: 'title',
-                        end: 'listMonth,dayGridMonth prev,next'
+                        end: 'connectGcal listMonth,dayGridMonth prev,next'
                     }}
                     initialView="dayGridMonth"
                     height={"100%"}

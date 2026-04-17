@@ -65,6 +65,25 @@ Navigate to `/informes` from the sidebar to view all meeting reports.
 
 *To use:* Users with **permiso 4** can click "Nuevo Informe" to upload a PDF report with metadata: title, date, type (Reunión General, Comisión de Proyectos, etc.), and optionally tag attendees from the profiles list. All users can browse the card grid and click any card to view details and download the PDF.
 
+### 9. Google Calendar Sync
+Users can connect their Google account to automatically sync Minerva events to a dedicated secondary Google Calendar, keeping their personal schedule completely private.
+
+*How it works:*
+- Click **"Conectar Google Calendar"** in the calendar view to initiate the OAuth 2.0 flow.
+- A dedicated secondary calendar named **"Minerva CCUC"** is automatically created in the user's Google account.
+- The app only asks for permission to manage *calendars it creates*, guaranteeing it cannot read or modify the user's primary/personal calendar events.
+- After granting permission, events are automatically pushed to the "Minerva CCUC" calendar on create/update/delete.
+- Connected status is shown with a teal indicator badge; click **"Desconectar"** to revoke access.
+
+*Architecture:*
+- **`gcal-auth`** Edge Function: Generates Google OAuth URL with user context using the restricted `calendar.app.created` scope.
+- **`gcal-callback`** Edge Function: Handles OAuth redirect, creates the secondary calendar, and stores the `calendar_id` alongside the tokens in `google_tokens`.
+- **`gcal-sync`** Edge Function: Pushes event changes specifically to the mapped secondary calendar API for all connected users.
+
+*Setup (admin):*
+1. Set Supabase Edge Function secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+2. Configure OAuth consent screen and redirect URI in Google Cloud Console.
+
 ---
 
 ## Tech Stack

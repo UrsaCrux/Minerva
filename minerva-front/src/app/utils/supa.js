@@ -465,6 +465,9 @@ export async function createEvento(eventoData, userIds = []) {
         if (asisError) console.error("Error creating attendance rows", asisError)
     }
 
+    // Fire-and-forget: sync to connected Google Calendars
+    syncGoogleCalendar(evento.id_evento, "create")
+
     return { evento, error: null }
 }
 
@@ -510,6 +513,9 @@ export async function updateEvento(id_evento, eventoData, userIds = []) {
             .in("id_usuario", toRemove)
     }
 
+    // Fire-and-forget: sync to connected Google Calendars
+    syncGoogleCalendar(id_evento, "update")
+
     return { evento, error: null }
 }
 
@@ -519,6 +525,9 @@ export async function updateEvento(id_evento, eventoData, userIds = []) {
  * @param {string} userId 
  */
 export async function deleteEvento(id_evento, userId) {
+    // Sync deletion to Google Calendars before soft-deleting
+    syncGoogleCalendar(id_evento, "delete")
+
     const { error } = await supaClient
         .from("eventos")
         .update({ deleted: true, deleted_by: userId })
@@ -820,3 +829,85 @@ export async function deleteInforme(informeId) {
 }
 
 export { supaClient }
+
+// ── Google Calendar Integration ──
+
+const EDGE_FN_BASE = process.env.NEXT_PUBLIC_dbUrl + "/functions/v1"
+
+/**
+ * Checks if the current user has connected their Google Calendar.
+ * @returns {Promise<boolean>}
+ */
+export async function isGoogleCalendarConnected() {
+    const { data: { session } } = await supaClient.auth.getSession()
+    if (!session?.user?.id) return false
+    const { data } = await supaClient
+        .from("google_tokens")
+        .select("user_id")
+        .eq("user_id", session.user.id)
+        .maybeSingle()
+    return !!data
+}
+
+/**
+ * Gets the Google OAuth URL to initiate calendar connection.
+ * @param {string} redirectUrl - Where to redirect after OAuth completes
+ * @returns {Promise<{url: string|null, error: string|null}>}
+ */
+export async function getGoogleAuthUrl(redirectUrl) {
+    const { data: { session } } = await supaClient.auth.getSession()
+    if (!session?.access_token) return { url: null, error: "No session" }
+
+    const res = await fetch(`${EDGE_FN_BASE}/gcal-auth`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": process.env.NEXT_PUBLIC_dbKey,
+        },
+        body: JSON.stringify({ redirect_url: redirectUrl }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) return { url: null, error: data.error || "Error getting auth URL" }
+    return { url: data.url, error: null }
+}
+
+/**
+ * Disconnects Google Calendar for the current user.
+ * @returns {Promise<{error: object|null}>}
+ */
+export async function disconnectGoogleCalendar() {
+    const { data: { session } } = await supaClient.auth.getSession()
+    if (!session?.user?.id) return { error: { message: "No session" } }
+
+    const { error } = await supaClient
+        .from("google_tokens")
+        .delete()
+        .eq("user_id", session.user.id)
+    return { error }
+}
+
+/**
+ * Triggers Google Calendar sync for an evento.
+ * @param {string} eventoId
+ * @param {"create"|"update"|"delete"} operation
+ */
+export async function syncGoogleCalendar(eventoId, operation) {
+    const { data: { session } } = await supaClient.auth.getSession()
+    if (!session?.access_token) return
+
+    try {
+        await fetch(`${EDGE_FN_BASE}/gcal-sync`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`,
+                "apikey": process.env.NEXT_PUBLIC_dbKey,
+            },
+            body: JSON.stringify({ evento_id: eventoId, operation }),
+        })
+    } catch (err) {
+        console.error("Google Calendar sync failed for evento:", eventoId, err)
+    }
+}

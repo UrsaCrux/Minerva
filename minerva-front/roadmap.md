@@ -21,3 +21,8 @@
 - [x] Crear página para subir informes de reuniones
 - [x] Implementar sistema para validar la asistencia
 - [x] Mostrar registro de asistencia a los usuarios
+
+## Google Calendar
+- [x] Integración OAuth 2.0 con Google Calendar API
+- [x] Sincronización automática de eventos a Google Calendar
+- [ ] Configurar Supabase secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
