@@ -1584,3 +1584,31 @@
 .react-flow__attribution a {
     color: var(--primary) !important;
 }
+
+/* ── Google Calendar Connect Button (FullCalendar Toolbar) ── */
+.fc-connectGcal-button {
+    background: transparent !important;
+    border: 1px solid rgba(159, 163, 255, 0.4) !important;
+    color: var(--on-surface-variant) !important;
+    transition: all 0.2s ease !important;
+    margin-right: 0.5rem !important;
+}
+
+.fc-connectGcal-button:hover {
+    background: rgba(159, 163, 255, 0.1) !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+}
+
+.fc-connectGcal-button .bi-calendar-check-fill {
+    color: var(--secondary) !important; /* Connected state icon color */
+    filter: drop-shadow(0 0 8px rgba(0, 219, 231, 0.6));
+}
+
+.fc-connectGcal-button .bi-google {
+    color: var(--on-surface-variant) !important; /* Disconnected state icon color */
+}
+
+.fc-connectGcal-button:hover .bi-google {
+    color: var(--primary) !important;
+}
