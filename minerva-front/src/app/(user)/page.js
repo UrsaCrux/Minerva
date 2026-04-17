@@ -50,7 +50,7 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-          <div className="home_card" style={{ flex: 1, padding: 0 }}>
+          <div className="home_card home_card--no-glow" style={{ flex: 1, padding: 0 }}>
             <div style={{ height: "100%" }}>
               <CalendarView userId={userId} eventos={eventos} />
             </div>
