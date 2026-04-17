@@ -166,6 +166,8 @@ export default function CalendarView({ userId, eventos: eventosProp }) {
     }
 
     const handleDisconnectGoogle = async () => {
+        if (!window.confirm("¿Estás seguro de que deseas desconectar Google Calendar? Los eventos ya sincronizados no se borrarán de Google, pero dejarán de actualizarse.")) return;
+        
         const { error } = await disconnectGoogleCalendar()
         if (!error) setGcalConnected(false)
     }

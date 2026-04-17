@@ -1602,7 +1602,6 @@
 
 .fc-connectGcal-button .bi-calendar-check-fill {
     color: var(--secondary) !important; /* Connected state icon color */
-    filter: drop-shadow(0 0 8px rgba(0, 219, 231, 0.6));
 }
 
 .fc-connectGcal-button .bi-google {
