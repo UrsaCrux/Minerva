@@ -782,7 +782,13 @@ export async function createInforme(informeData, pdfFile, asistentesIds) {
     // Upload PDF
     let pdfUrl = null
     if (pdfFile) {
-        const fileName = `${Date.now()}-${pdfFile.name}`
+        // Sanitize filename: remove accents, replace spaces, keep only safe characters
+        const sanitizedName = pdfFile.name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // Remove accents
+            .replace(/\s+/g, "-") // Replace spaces with hyphens
+            .replace(/[^a-zA-Z0-9._-]/g, "") // Keep only alphanumeric, dots, hyphens, underscores
+        const fileName = `${Date.now()}-${sanitizedName}`
         const { error: uploadError } = await supaClient.storage
             .from("informes")
             .upload(fileName, pdfFile)
