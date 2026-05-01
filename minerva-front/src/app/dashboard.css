@@ -292,6 +292,10 @@
     border-radius: 12px 12px 0 0;
 }
 
+.home_card--no-glow::before {
+    display: none;
+}
+
 .db_col_assigned,
 .db_col_anuncios,
 .db_col_eventos {
@@ -324,11 +328,13 @@
 .db_tasks_list::-webkit-scrollbar {
     width: 6px;
 }
+
 .db_scroll_list::-webkit-scrollbar-thumb,
 .db_tasks_list::-webkit-scrollbar-thumb {
     background-color: var(--surface-container-highest);
     border-radius: 4px;
 }
+
 .db_scroll_list::-webkit-scrollbar-track,
 .db_tasks_list::-webkit-scrollbar-track {
     background-color: transparent;
@@ -445,10 +451,21 @@
     margin-top: 8px;
 }
 
-.status_confirmed { color: var(--secondary); }
-.status_absent { color: var(--error); }
-.status_pending { color: var(--primary); }
-.status_none { color: var(--on-surface-variant); }
+.status_confirmed {
+    color: var(--secondary);
+}
+
+.status_absent {
+    color: var(--error);
+}
+
+.status_pending {
+    color: var(--primary);
+}
+
+.status_none {
+    color: var(--on-surface-variant);
+}
 
 .task_status_badge.en_progreso,
 .task_status_badge.in_progress {
@@ -534,8 +551,15 @@
 }
 
 @keyframes popup_fadein {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Info block */
