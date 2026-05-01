@@ -3,12 +3,13 @@ import { createClient } from "./client"
 const supaClient = createClient()
 
 /**
- * Fetches the current authenticated user's profile from Supabase Auth.
+ * Returns the current user from the cached session (no network call).
+ * Use this for display only — for security checks rely on RLS / server-side verification.
  * @returns {Promise<{user: object|null, error: object|null}>}
  */
 export async function getUserProfile() {
-    const { data, error } = await supaClient.auth.getUser()
-    return { user: data?.user ?? null, error: error ?? null }
+    const { data, error } = await supaClient.auth.getSession()
+    return { user: data?.session?.user ?? null, error: error ?? null }
 }
 
 /**
@@ -196,24 +197,22 @@ export async function uploadAvatar(userId, file) {
  * @param {string} userId 
  */
 export async function getMyTasks(userId) {
-    // 1. Tasks assigned to user
-    const { data: assignedTasks, error: assignedError } = await supaClient
-        .from("tasks")
-        .select("*")
-        .eq("assigned_to", userId)
+    const [assignedRes, relatedRes] = await Promise.all([
+        supaClient
+            .from("tasks")
+            .select("*")
+            .eq("assigned_to", userId),
+        supaClient
+            .from("tasks_profiles")
+            .select("id_task, tasks(*)")
+            .eq("id_profile", userId),
+    ])
 
-    if (assignedError) return { tasks: [], error: assignedError }
+    if (assignedRes.error) return { tasks: [], error: assignedRes.error }
+    if (relatedRes.error) return { tasks: [], error: relatedRes.error }
 
-    // 2. Tasks where user is in tasks_profiles
-    const { data: relatedTasksData, error: relatedError } = await supaClient
-        .from("tasks_profiles")
-        .select("id_task, tasks(*)")
-        .eq("id_profile", userId)
-
-    if (relatedError) return { tasks: [], error: relatedError }
-
-    // Extract task objects from relatedTasksData
-    const relatedTasks = relatedTasksData.map(item => item.tasks).filter(Boolean)
+    const assignedTasks = assignedRes.data || []
+    const relatedTasks = (relatedRes.data || []).map(item => item.tasks).filter(Boolean)
 
     // Merge and deduplicate
     const allTasks = [...assignedTasks, ...relatedTasks]
@@ -497,21 +496,26 @@ export async function updateEvento(id_evento, eventoData, userIds = []) {
     const toAdd = userIds.filter(uid => !existingIds.includes(uid))
     const toRemove = existingIds.filter(uid => !userIds.includes(uid))
 
+    const syncOps = []
     if (toAdd.length > 0) {
         const rows = toAdd.map(uid => ({
             id_evento,
             id_usuario: uid,
             asistencia: 0
         }))
-        await supaClient.from("eventos_usuarios").insert(rows)
+        syncOps.push(supaClient.from("eventos_usuarios").insert(rows))
     }
 
     if (toRemove.length > 0) {
-        await supaClient.from("eventos_usuarios")
-            .delete()
-            .eq("id_evento", id_evento)
-            .in("id_usuario", toRemove)
+        syncOps.push(
+            supaClient.from("eventos_usuarios")
+                .delete()
+                .eq("id_evento", id_evento)
+                .in("id_usuario", toRemove)
+        )
     }
+
+    if (syncOps.length > 0) await Promise.all(syncOps)
 
     // Fire-and-forget: sync to connected Google Calendars
     syncGoogleCalendar(id_evento, "update")
@@ -580,9 +584,7 @@ export async function confirmarAsistencia(id_evento, id_usuario) {
  * @param {File[]} archivos 
  */
 export async function enviarJustificacion(id_evento, id_usuario, motivo, archivos = []) {
-    const uploadedUrls = []
-
-    for (const file of archivos) {
+    const uploadResults = await Promise.all(archivos.map(async file => {
         const fileExt = file.name.split(".").pop()
         const fileName = `${id_evento}/${id_usuario}-${Math.random()}.${fileExt}`
 
@@ -590,13 +592,15 @@ export async function enviarJustificacion(id_evento, id_usuario, motivo, archivo
             .from("justificaciones")
             .upload(fileName, file)
 
-        if (!uploadError) {
-            const { data: { publicUrl } } = supaClient.storage
-                .from("justificaciones")
-                .getPublicUrl(fileName)
-            uploadedUrls.push(publicUrl)
-        }
-    }
+        if (uploadError) return null
+
+        const { data: { publicUrl } } = supaClient.storage
+            .from("justificaciones")
+            .getPublicUrl(fileName)
+        return publicUrl
+    }))
+
+    const uploadedUrls = uploadResults.filter(Boolean)
 
     const { error } = await supaClient
         .from("eventos_usuarios")

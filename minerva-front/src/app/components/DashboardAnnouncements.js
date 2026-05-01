@@ -5,6 +5,7 @@ import { getAnuncios, createAnuncio, hasPermiso } from "../utils/supa"
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material"
 import { MdAdd, MdChevronLeft, MdChevronRight } from "react-icons/md"
 import { createClient } from "../utils/client"
+import Markdown, { stripMarkdown } from "./Markdown"
 
 function CreateAnuncioModal({ onClose, onCreated }) {
     const [titulo, setTitulo] = useState("")
@@ -49,11 +50,12 @@ function CreateAnuncioModal({ onClose, onCreated }) {
                     <TextField
                         label="Cuerpo"
                         multiline
-                        rows={4}
+                        rows={6}
                         fullWidth
                         value={cuerpo}
                         onChange={(e) => setCuerpo(e.target.value)}
                         required
+                        helperText="Soporta Markdown: **negrita**, *cursiva*, `código`, listas, [enlaces](url)"
                     />
                 </DialogContent>
                 <DialogActions style={{ padding: 24 }}>
@@ -85,14 +87,11 @@ function ViewAnuncioModal({ anuncio, onClose }) {
                     <span style={{ opacity: 0.6 }}>•</span>
                     <span>{new Date(anuncio.created_at).toLocaleDateString()}</span>
                 </div>
-                <div style={{ 
-                    color: "var(--on-surface)", 
-                    fontSize: "0.95rem", 
-                    lineHeight: 1.6, 
-                    whiteSpace: "pre-wrap"
-                }}>
+                <Markdown
+                    className="anuncio_body"
+                >
                     {anuncio.cuerpo}
-                </div>
+                </Markdown>
             </DialogContent>
             <DialogActions style={{ padding: "16px 24px" }}>
                 <Button onClick={onClose} variant="outlined" color="inherit">Cerrar</Button>
@@ -224,18 +223,21 @@ export default function DashboardAnnouncements() {
                                         <div style={{ fontSize: "1.1rem", fontWeight: "bold", fontFamily: "'Space Grotesk', sans-serif", color: "var(--primary)", lineHeight: 1.2 }}>
                                             {anuncio.titulo}
                                         </div>
-                                        <div style={{ 
-                                            color: "var(--on-surface-variant)", 
-                                            fontSize: "0.8rem", 
-                                            lineHeight: 1.4, 
-                                            whiteSpace: "pre-wrap",
+                                        <div style={{
+                                            color: "var(--on-surface-variant)",
+                                            fontSize: "0.8rem",
+                                            lineHeight: 1.4,
                                             display: "-webkit-box",
                                             WebkitLineClamp: 3,
                                             WebkitBoxOrient: "vertical",
                                             overflow: "hidden",
-                                            flex: 1
+                                            flex: 1,
+                                            wordBreak: "break-word"
                                         }}>
-                                            {anuncio.cuerpo?.length > 100 ? anuncio.cuerpo.substring(0, 100) + " [...]" : anuncio.cuerpo}
+                                            {(() => {
+                                                const plain = stripMarkdown(anuncio.cuerpo).replace(/\s+/g, " ").trim()
+                                                return plain.length > 160 ? plain.substring(0, 160).trimEnd() + "…" : plain
+                                            })()}
                                         </div>
                                     </div>
                                 </div>

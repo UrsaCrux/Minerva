@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { getTaskProgresos, createProgreso, completeTask, canCompleteTask } from "../utils/supa"
 import { MdClose, MdAdd, MdCheckCircle, MdDoneAll } from "react-icons/md"
 import { Button, Dialog, DialogContent, DialogActions, CircularProgress } from "@mui/material"
+import Markdown from "./Markdown"
 
 const MIN_TITULO_LENGTH = 3
 
@@ -156,7 +157,7 @@ export default function TaskDetailsDialog({ task, onClose, teams, userId, onTask
                 {task.description && (
                     <div className="td_section">
                         <div className="td_section_label">Descripción</div>
-                        <div className="td_description">{task.description}</div>
+                        <Markdown className="td_description">{task.description}</Markdown>
                     </div>
                 )}
 
@@ -246,11 +247,14 @@ export default function TaskDetailsDialog({ task, onClose, teams, userId, onTask
                             />
                             <textarea
                                 className="td_progreso_textarea"
-                                placeholder="Descripción (opcional)"
+                                placeholder="Descripción (opcional) — Soporta Markdown"
                                 value={descripcion}
                                 onChange={e => setDescripcion(e.target.value)}
-                                rows={2}
+                                rows={3}
                             />
+                            <div className="td_progreso_md_hint">
+                                Soporta Markdown: **negrita**, *cursiva*, `código`, listas, [enlaces](url)
+                            </div>
                             <button
                                 className="td_progreso_submit_btn"
                                 type="submit"
@@ -273,7 +277,7 @@ export default function TaskDetailsDialog({ task, onClose, teams, userId, onTask
                                 <div key={p.id} className="progreso_card">
                                     <div className="progreso_card_title">{p.titulo || "Sin título"}</div>
                                     {p.descripcion && (
-                                        <div className="progreso_card_desc">{p.descripcion}</div>
+                                        <Markdown className="progreso_card_desc">{p.descripcion}</Markdown>
                                     )}
                                     <div className="progreso_card_meta">
                                         <div className="progreso_card_author">
